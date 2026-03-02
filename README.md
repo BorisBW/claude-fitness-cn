@@ -27,7 +27,7 @@ Coach Paddy pulls your sleep, HRV, heart rate, body battery, and training data f
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (CLI)
 - A Garmin watch + Garmin Connect account
-- [Garmin MCP Server](https://github.com/Taxuspt/garmin_mcp) (or [China fork](https://github.com/bifeiwang-hub/garmin-mcp-cn) for `garmin.cn` users)
+- [Garmin MCP Server](https://github.com/Taxuspt/garmin_mcp) (or [China fork](https://github.com/BorisBW/garmin-mcp-cn) for `garmin.cn` users)
 - [Obsidian](https://obsidian.md/) (optional but recommended for persistent memory)
 
 ## Setup
@@ -41,7 +41,7 @@ uvx --python 3.12 --from git+https://github.com/Taxuspt/garmin_mcp garmin-mcp-au
 
 **China (garmin.cn) users:**
 ```bash
-GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/bifeiwang-hub/garmin-mcp-cn garmin-mcp-auth
+GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/BorisBW/garmin-mcp-cn garmin-mcp-auth
 ```
 
 ### 2. Configure MCP in Claude Code
@@ -63,7 +63,7 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-> For China users, replace the repo URL with `git+https://github.com/bifeiwang-hub/garmin-mcp-cn` and add `"env": {"GARMIN_IS_CN": "true"}`.
+> For China users, replace the repo URL with `git+https://github.com/BorisBW/garmin-mcp-cn` and add `"env": {"GARMIN_IS_CN": "true"}`.
 
 ### 3. Install the Skill
 
@@ -178,7 +178,7 @@ Confidence = Injury(40%) + Load(25%) + Fitness(25%) + Recovery(10%)
 
 1. **安装 Garmin MCP 服务器**（中国区用户）：
    ```bash
-   GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/bifeiwang-hub/garmin-mcp-cn garmin-mcp-auth
+   GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/BorisBW/garmin-mcp-cn garmin-mcp-auth
    ```
 
 2. **配置 Claude Code MCP**：在 `~/.claude/settings.json` 添加 Garmin MCP 服务器（见上方英文说明）
