@@ -1,0 +1,10 @@
+{
+  "outputDirectory": "public",
+  "buildCommand": "node scripts/make-sample.mjs",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
+  ]
+}

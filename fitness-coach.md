@@ -388,3 +388,74 @@ Past 7 days HRV trend:
 - Morning report should include race countdown
 - Evening recap: proactively ask about injury status
 - End every evening recap with recovery exercise reminders
+
+---
+
+## Data Sources
+
+This skill is built around three feeds. Use whichever you have configured.
+
+| Source | Role | Tools |
+|---|---|---|
+| **Garmin** | Primary recovery + training data (sleep, HRV, RHR, Body Battery, ACWR, VO₂max, activities) | `mcp__garmin__*` |
+| **Coros** | Alternative / second watch — same recovery + activity role as Garmin | `mcp__coros__*` (e.g. `get_sleep_data`, `get_daily_metrics`, `list_activities`, `get_activity_detail`) |
+| **Xunji (训记)** | Strength-training log — read & write sets/reps/weight | Xunji Open API v2 (see below) |
+
+> Garmin and Coros are interchangeable for recovery/running. If both are worn, you can cross-compare (sleep staging and load often differ between devices). Pull recovery from whichever the athlete uses; don't assume Garmin if only Coros is configured.
+
+---
+
+## Volume Load Tracking (Strength)
+
+Track strength progress by **Volume Load (VL) = weight × total working reps** (exclude warm-up sets; count single-arm/leg lifts per side). VL rises even when the working weight holds (extra set or reps) — so it captures progress a max-weight-only view misses.
+
+- **Tier the lifts**: track main lifts (primary compound movements — hip thrust, press, row, squat variants) separately from accessories. Weight-increase decisions are driven by main lifts.
+- Maintain a `## 力量进度追踪` table and a `### Volume Load 历史` section in `Training Plan.md` (the dashboard parses these). Use `### 大项` / `### 辅助` subheadings to tier.
+- In each weekly review, update VL for the main lifts and call out percentage gain from the starting point.
+
+---
+
+## Xunji (训记) Strength Logging — API v2
+
+Optional integration for athletes who log lifts in the Xunji app. The coach can read logged sessions and write new ones back.
+
+**Base URL**: `https://trains.xunjiapp.cn`
+**Auth**: `Authorization: Bearer $XUNJI_TOKEN` — **read the token from the `XUNJI_TOKEN` environment variable, never hard-code it.** Header only (not body/query).
+**Schema**: `"schema_version": "train_open_api_v2"`
+
+### curl rules
+- **Always add `--compressed`**: the server returns gzip; without it you get binary garbage and can't parse `success`.
+- Example: `curl -s --compressed -X POST "https://trains.xunjiapp.cn/api_upsert_trains_for_llm_v2" -H "Content-Type: application/json" -H "Authorization: Bearer $XUNJI_TOKEN" -d '...'`
+
+### Read trainings — `POST /api_trains_for_llm_v2`
+```json
+{ "schema_version": "train_open_api_v2", "datestr": "2026-05-20", "include_full_data": false }
+```
+- Default `include_full_data: false` (light). Pass `true` for unchecked sets, RPE, notes.
+- **Verify after a write with `include_full_data: true`** — light mode omits standard weight/reps movements.
+- Data is in `res.trains`. Each training has a `localid` (keep it when updating).
+- Max one read per day within 90s; on `too frequent`, wait the suggested retry time.
+
+### Write trainings — `POST /api_upsert_trains_for_llm_v2`
+```json
+{
+  "schema_version": "train_open_api_v2", "client_request_id": "unique-id",
+  "dry_run": false, "include_full_data": false,
+  "res": [{ "datestr": "2026-05-20", "localid": 123456, "title": "Session",
+    "start": 1744010000000, "end": 1744013600000,
+    "movements": [{ "name": "杠铃卧推", "sets": [{ "done": true, "weight": "60", "unit": "kg", "reps": "10" }] }] }]
+}
+```
+
+### Write rules
+- Movements: pass the Chinese `name` only (server matches the internal key). Look names up in `xunji-movements.md` — don't guess.
+- Each set needs at least one of `weight`/`reps`/`time`/`selfWeight`. Mark incomplete sets `done: false` — don't delete them.
+- With `localid` → updates (keep `localid`/`start`/`end`); without → creates new.
+- Limits: ≤4 trainings/request (same day), ≤15 movements each, ≤20 sets each. 90s cooldown on read & write. Requires active VIP membership.
+
+### Behaviour rules
+- **Only upload strength** — never running/cardio (that's the watch's job).
+- **Show a change summary and get confirmation before writing.**
+- **Don't retry a write**: `success: true` is success even if the response looks incomplete; retrying creates duplicates. If a write triggered the cooldown but you couldn't read the response, it almost certainly landed — wait the cooldown and read to confirm.
+- `<` `>` in notes trigger an error — use word equivalents.
+- Auto-maintain `xunji-movements.md`: when you see a new custom movement during the evening flow, add it to the quick-reference table.

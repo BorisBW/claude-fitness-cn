@@ -1,0 +1,10 @@
+# Real data parsed from your private vault — never commit
+public/data.json
+
+# Vercel project linkage / secrets
+.vercel
+.env
+.env.*
+
+node_modules
+.DS_Store

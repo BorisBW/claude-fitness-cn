@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Coach Paddy · Data Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0d12; --card: #141a22; --card2: #1a212b; --border: #232b36;
+    --text: #e8eef5; --muted: #8b97a6; --accent: #f0883e;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149; --blue: #58a6ff; --purple: #a371f7;
+    --trail1: #f0883e; --trail2: #f85149;
+    --hyrox1: #58a6ff; --hyrox2: #a371f7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 14px 4px 4px; }
+  header h1 { font-size: 22px; letter-spacing: .3px; }
+  header .phase { color: var(--muted); font-size: 13px; }
+  nav {
+    position: sticky; top: 0; z-index: 20; background: rgba(10,13,18,.9);
+    backdrop-filter: blur(12px); display: flex; gap: 4px; overflow-x: auto;
+    padding: 10px 0; margin-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  nav a {
+    color: var(--muted); text-decoration: none; font-size: 14px;
+    padding: 6px 14px; border-radius: 999px; white-space: nowrap; transition: .15s;
+  }
+  nav a:hover, nav a.active { color: var(--text); background: var(--card2); }
+  section { margin: 34px 0; scroll-margin-top: 64px; }
+  h2 { font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 9px; letter-spacing: .3px; }
+  h2::before { content: ''; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+  .grid { display: grid; gap: 13px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 15px 17px;
+  }
+  .kpi .label { color: var(--muted); font-size: 12px; }
+  .kpi .value { font-size: 27px; font-weight: 750; margin: 2px 0; letter-spacing: -.5px; }
+  .kpi .sub { color: var(--muted); font-size: 12px; }
+  .kpi .value .unit { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .charts2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .charts3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .chart-card h3 { font-size: 14px; margin-bottom: 8px; color: var(--text); }
+  .tier-label { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+  .chart-card .delta { font-size: 12px; color: var(--green); font-weight: 600; margin-left: 6px; }
+  .chart-box { position: relative; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  .table-scroll { overflow-x: auto; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .badge.resolved, .badge.done { background: rgba(63,185,80,.15); color: var(--green); }
+  .badge.treating, .badge.next { background: rgba(210,153,34,.15); color: var(--yellow); }
+  .badge.watching, .badge.plan { background: rgba(88,166,255,.15); color: var(--blue); }
+  .badge.skipped { background: rgba(139,151,166,.15); color: var(--muted); }
+  .badge.race { background: rgba(248,81,73,.15); color: var(--red); }
+  .badge.high { background: rgba(248,81,73,.15); color: var(--red); }
+  .badge.mid { background: rgba(210,153,34,.15); color: var(--yellow); }
+  .injury-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .injury .name { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .injury .note { color: var(--muted); font-size: 13px; }
+  .goal-list { list-style: none; }
+  .goal-list li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .goal-list li:last-child { border-bottom: none; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; padding: 28px 0; }
+
+  /* ---- HERO ---- */
+  .hero {
+    position: relative; border-radius: 18px; overflow: hidden;
+    padding: 30px 28px; margin-bottom: 14px;
+    background: linear-gradient(120deg, #1a212b 0%, #141a22 55%, #0e1319 100%);
+    border: 1px solid var(--border);
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -60%; right: -10%; width: 60%; height: 220%;
+    background: radial-gradient(circle, rgba(240,136,62,.22), transparent 60%);
+    pointer-events: none;
+  }
+  .hero .tag {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .hero h2 { font-size: 26px; margin: 0 0 4px; }
+  .hero h2::before { display: none; }
+  .hero .detail { color: var(--muted); font-size: 15px; }
+  .hero .count {
+    display: flex; align-items: baseline; gap: 10px; margin-top: 18px;
+  }
+  .hero .count .num {
+    font-size: 76px; font-weight: 800; line-height: .9; letter-spacing: -3px;
+    background: linear-gradient(120deg, var(--trail1), var(--trail2));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero .count .lbl { color: var(--muted); font-size: 15px; }
+  .hero .stats { display: flex; gap: 26px; margin-top: 20px; flex-wrap: wrap; }
+  .hero .stats .s .v { font-size: 21px; font-weight: 700; }
+  .hero .stats .s .k { color: var(--muted); font-size: 12px; }
+
+  /* ---- 比赛模块 banner ---- */
+  .race-banner {
+    border-radius: 16px; padding: 22px 24px; margin-bottom: 14px;
+    border: 1px solid var(--border); position: relative; overflow: hidden;
+  }
+  .race-banner.trail { background: linear-gradient(110deg, rgba(240,136,62,.16), rgba(248,81,73,.08) 70%, transparent); }
+  .race-banner.hyrox { background: linear-gradient(110deg, rgba(88,166,255,.16), rgba(163,113,247,.08) 70%, transparent); }
+  .race-banner .rb-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  .race-banner .rb-name { font-size: 22px; font-weight: 750; }
+  .race-banner .rb-sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .race-banner .rb-count { text-align: right; }
+  .race-banner .rb-count .n { font-size: 40px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+  .race-banner.trail .rb-count .n { color: var(--trail1); }
+  .race-banner .rb-count .l { color: var(--muted); font-size: 12px; }
+  .verdict { font-size: 14px; color: var(--text); margin-top: 14px; padding: 11px 14px;
+    background: rgba(255,255,255,.03); border-left: 3px solid var(--accent); border-radius: 6px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .technique-list { list-style: none; }
+  .technique-list li { padding: 7px 0 7px 24px; position: relative; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .technique-list li:last-child { border-bottom: none; }
+  .technique-list li::before { content: '▸'; position: absolute; left: 4px; color: var(--accent); }
+  .estimate-big { font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--blue); }
+  .profile-tag { font-size: 15px; font-weight: 600; }
+  .bottleneck { display: flex; gap: 12px; align-items: flex-start; }
+  .bottleneck .rank {
+    flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--card2);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--accent);
+  }
+  .status-note { font-size: 13px; color: var(--muted); padding: 10px 13px; background: rgba(255,255,255,.03); border-radius: 8px; }
+
+  #gate { position: fixed; inset: 0; background: var(--bg); z-index: 100;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+  #gate input { background: var(--card); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 16px; border-radius: 8px; font-size: 16px; text-align: center; }
+  #gate button { background: var(--accent); border: none; color: #000; font-weight: 600;
+    padding: 10px 28px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+  .hidden { display: none !important; }
+  @media (max-width: 600px) {
+    .kpi .value { font-size: 22px; }
+    .hero .count .num { font-size: 60px; }
+    .hero h2 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div id="gate">
+  <div style="font-size:32px">🏃</div>
+  <div style="color:var(--muted)">Coach Paddy Data Hub</div>
+  <input id="pass" type="password" placeholder="口令" autocomplete="off">
+  <button onclick="checkPass()">进入</button>
+</div>
+
+<div class="wrap hidden" id="app">
+  <header>
+    <h1>🏃 Coach Paddy · Data Hub</h1>
+    <span class="phase" id="phase"></span>
+  </header>
+  <nav id="nav">
+    <a href="#overview" class="active">总览</a>
+    <a href="#races">比赛</a>
+    <a href="#trail">越野跑</a>
+    <a href="#hyrox">Hyrox</a>
+    <a href="#strength">力量</a>
+    <a href="#running">跑步</a>
+    <a href="#recovery">恢复</a>
+    <a href="#physio">生理</a>
+    <a href="#rehab">康复</a>
+  </nav>
+
+  <section id="overview">
+    <div id="hero"></div>
+    <div class="grid kpis" id="kpiCards"></div>
+  </section>
+
+  <section id="races">
+    <h2>比赛</h2>
+    <div class="grid charts2" id="raceCards" style="margin-bottom:14px"></div>
+    <div class="grid charts2">
+      <div class="card table-scroll">
+        <h3 class="tier-label">🏅 个人 PB</h3>
+        <table id="pbTable"></table>
+      </div>
+      <div class="card">
+        <h3 class="tier-label">🎯 目标</h3>
+        <ul class="goal-list" id="perfGoals"></ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:13px">
+      <h3 class="tier-label">🥇 底层健康目标（服务于比赛表现）</h3>
+      <ul class="goal-list" id="healthGoals"></ul>
+    </div>
+  </section>
+
+  <section id="trail">
+    <h2>越野跑专项</h2>
+    <div class="race-banner trail" id="trailBanner"></div>
+    <div class="grid charts2">
+      <div class="card chart-card">
+        <h3>长距离渐进（距离 km / 爬升 m）</h3>
+        <div class="chart-box" style="height:240px"><canvas id="trailProgChart"></canvas></div>
+      </div>
+      <div class="card chart-card">
+        <h3>脚踝稳定（闭眼单腿站 · 秒）<span class="delta" id="ankleTargetLbl"></span></h3>
+        <div class="chart-box" style="height:240px"><canvas id="ankleChart"></canvas></div>
+      </div>
+    </div>
+    <div class="grid charts2" style="margin-top:13px">
+      <div class="card">
+        <h3 class="tier-label">⚠️ 剩余 Gap</h3>
+        <div id="trailGaps"></div>
+      </div>
+      <div class="card">
+        <h3 class="tier-label">⛰️ 下坡技术要点</h3>
+        <ul class="technique-list" id="downhillList"></ul>
+      </div>
+    </div>
+    <div class="card table-scroll" style="margin-top:13px">
+      <h3 class="tier-label">📅 长距离备赛计划</h3>
+      <table id="trailPlanTable"></table>
+    </div>
+  </section>
+
+  <section id="hyrox">
+    <h2>Hyrox 专项</h2>
+    <div class="race-banner hyrox" id="hyroxBanner"></div>
+    <div class="grid charts2">
+      <div class="card chart-card">
+        <h3>站点相对强度雷达（Coach 评估 0-100）</h3>
+        <div class="chart-box" style="height:320px"><canvas id="hyroxRadar"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 class="tier-label">⏱️ Solo 完赛预估</h3>
+        <div class="estimate-big" id="hyroxEstimate"></div>
+        <div style="color:var(--muted);font-size:13px;margin:4px 0 16px" id="hyroxEstRange"></div>
+        <h3 class="tier-label">🎯 已知瓶颈（优先级）</h3>
+        <div id="hyroxBottlenecks"></div>
+        <div class="verdict" style="margin-top:14px" id="hyroxRoi"></div>
+      </div>
+    </div>
+    <div class="card table-scroll" style="margin-top:13px">
+      <h3 class="tier-label">📋 站点 Baseline 记录</h3>
+      <table id="hyroxBaseTable"></table>
+    </div>
+  </section>
+
+  <section id="strength">
+    <h2>力量进度 · Volume Load</h2>
+    <h3 class="tier-label">⭐ 大项（主升 + 大复合）</h3>
+    <div class="grid charts3" id="vlChartsMain"></div>
+    <h3 class="tier-label" style="margin-top:18px">辅助动作</h3>
+    <div class="grid charts3" id="vlChartsAcc"></div>
+    <div class="card table-scroll" style="margin-top:12px">
+      <h3 class="tier-label">⭐ 大项</h3>
+      <table id="progressTableMain"></table>
+      <h3 class="tier-label" style="margin-top:16px">辅助</h3>
+      <table id="progressTableAcc"></table>
+    </div>
+  </section>
+
+  <section id="running">
+    <h2>跑步</h2>
+    <div class="grid charts2">
+      <div class="card chart-card">
+        <h3>周跑量（km）</h3>
+        <div class="chart-box" style="height:220px"><canvas id="weeklyRunChart"></canvas></div>
+      </div>
+      <div class="card chart-card table-scroll">
+        <h3>最近训练</h3>
+        <table id="activityTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <section id="recovery">
+    <h2>恢复趋势（近35天）</h2>
+    <div class="grid charts2">
+      <div class="card chart-card"><h3>HRV / RHR</h3><div class="chart-box" style="height:220px"><canvas id="hrvChart"></canvas></div></div>
+      <div class="card chart-card"><h3>睡眠评分 / Readiness</h3><div class="chart-box" style="height:220px"><canvas id="sleepChart"></canvas></div></div>
+    </div>
+  </section>
+
+  <section id="physio">
+    <h2>生理数据</h2>
+    <div class="grid charts2">
+      <div class="card chart-card"><h3>心率区间（LTHR <span id="lthr"></span> bpm）</h3><table id="zoneTable"></table></div>
+      <div class="card chart-card"><h3>基准区间</h3><table id="baselineTable"></table></div>
+      <div class="card chart-card"><h3>体重 <span class="delta" id="weightDelta"></span></h3><div class="chart-box" style="height:180px"><canvas id="weightChart"></canvas></div></div>
+      <div class="card chart-card"><h3>营养</h3><table id="nutritionTable"></table></div>
+    </div>
+    <div class="card table-scroll" style="margin-top:12px">
+      <h3 style="font-size:14px;margin-bottom:8px">身体维度（cm，每2周测量）</h3>
+      <table id="bodyTable"></table>
+    </div>
+  </section>
+
+  <section id="rehab">
+    <h2>康复 / 伤病</h2>
+    <div class="grid injury-grid" id="injuryCards"></div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+// Front-end gate only (deters casual visitors, NOT real security).
+// Change this before deploying. Do not store sensitive identity data.
+const PASSCODE = 'changeme';
+function checkPass() {
+  if (document.getElementById('pass').value === PASSCODE) {
+    localStorage.setItem('paddy_auth', '1');
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    init();
+  } else {
+    document.getElementById('pass').value = '';
+    document.getElementById('pass').placeholder = '口令错误';
+  }
+}
+document.getElementById('pass').addEventListener('keydown', e => { if (e.key === 'Enter') checkPass(); });
+if (localStorage.getItem('paddy_auth') === '1') {
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  init();
+}
+
+const C = { muted: '#8b97a6', grid: '#232b36', accent: '#f0883e', green: '#3fb950', blue: '#58a6ff', red: '#f85149', yellow: '#d29922', purple: '#a371f7' };
+Chart.defaults.color = C.muted;
+Chart.defaults.borderColor = C.grid;
+Chart.defaults.font.family = '-apple-system, "PingFang SC", sans-serif';
+
+const daysTo = (dateStr) => Math.ceil((new Date(dateStr + 'T00:00:00') - new Date()) / 864e5);
+
+async function init() {
+  const res = await fetch('data.json').catch(() => null);
+  const d = res && res.ok ? await res.json() : await (await fetch('data.sample.json')).json();
+  document.getElementById('phase').textContent = d.phase;
+  renderHero(d); renderKpis(d); renderRaces(d);
+  renderTrail(d); renderHyrox(d);
+  renderVl(d); renderProgress(d); renderRunning(d); renderRecovery(d); renderPhysio(d); renderRehab(d);
+  document.getElementById('footer').textContent =
+    '数据更新于 ' + new Date(d.generatedAt).toLocaleString('zh-CN') + ' · 来源：Obsidian Coach Paddy 训练档案';
+  setupNav();
+}
+
+function renderHero(d) {
+  const r = d.trail.race;
+  const days = daysTo(r.date);
+  document.getElementById('hero').innerHTML = `
+    <div class="hero">
+      <span class="tag">A 赛 · 当前焦点</span>
+      <h2>${r.name}</h2>
+      <div class="detail">${r.distance}km · ${r.elevation}m 爬升 · 体感跑，不追成绩</div>
+      <div class="count"><span class="num">${days}</span><span class="lbl">天后开赛<br>${r.date}</span></div>
+      <div class="stats">
+        <div class="s"><div class="v">${d.trail.longest.distance}km</div><div class="k">最长越野（${d.trail.longest.date.slice(5)}）</div></div>
+        <div class="s"><div class="v">${d.trail.longest.elevation}m</div><div class="k">最高爬升 ✅ 超比赛 +17%</div></div>
+        <div class="s"><div class="v">${d.kpi.vo2max.value}</div><div class="k">VO2max</div></div>
+        <div class="s"><div class="v">${d.kpi.acwr.value}</div><div class="k">ACWR（OPTIMAL）</div></div>
+      </div>
+    </div>`;
+}
+
+function kpiCard(label, value, sub, color) {
+  return `<div class="card kpi"><div class="label">${label}</div>
+    <div class="value" style="${color ? 'color:' + color : ''}">${value}</div>
+    <div class="sub">${sub ?? ''}</div></div>`;
+}
+function renderKpis(d) {
+  const k = d.kpi, [lo, hi] = d.weeklyRunTarget;
+  const kmPct = Math.round((k.currentWeekKm / lo) * 100);
+  const ac = k.acwr.value, acColor = ac >= 0.8 && ac <= 1.3 ? C.green : ac > 1.5 ? C.red : C.yellow;
+  document.getElementById('kpiCards').innerHTML =
+    kpiCard('ACWR 负荷比', ac, ac <= 1.3 && ac >= 0.8 ? 'OPTIMAL 安全区' : '注意', acColor) +
+    kpiCard('VO2max', k.vo2max.value, '跑步体能基线') +
+    kpiCard('HRV 连续 BALANCED', k.balStreak.value + '<span class="unit"> 天</span>', '截至 ' + k.balStreak.date, C.green) +
+    kpiCard('本周跑量', k.currentWeekKm + '<span class="unit"> km</span>', `目标 ${lo}-${hi}km（${kmPct}%）`) +
+    kpiCard('体重', d.weight.current + '<span class="unit"> kg</span>', `目标 ${d.weight.target}`);
+}
+
+function renderRaces(d) {
+  document.getElementById('raceCards').innerHTML = d.races.upcoming.map(r => {
+    const isTrail = r.accent === 'trail';
+    const cnt = r.date
+      ? `<div class="rb-count"><div class="n">${daysTo(r.date)}</div><div class="l">天 · ${r.date}</div></div>`
+      : `<div class="rb-count"><div class="n" style="color:var(--muted);font-size:24px">休眠</div><div class="l">无赛程</div></div>`;
+    return `<a href="#${r.anchor}" style="text-decoration:none;color:inherit">
+      <div class="race-banner ${r.accent}">
+        <div class="rb-top">
+          <div><div class="rb-name">${isTrail ? '⛰️ ' : '🔥 '}${r.name}</div><div class="rb-sub">${r.detail}</div>
+          <span class="badge ${isTrail ? 'race' : 'next'}" style="margin-top:8px">${r.tag}</span></div>
+          ${cnt}
+        </div>
+      </div></a>`;
+  }).join('');
+  document.getElementById('pbTable').innerHTML =
+    '<tr><th>距离</th><th>成绩</th><th>配速</th><th>日期</th></tr>' +
+    d.pbs.map(p => `<tr><td><b>${p.dist}</b></td><td><b style="color:var(--accent)">${p.time}</b></td><td>${p.pace}</td><td style="color:var(--muted)">${p.date}</td></tr>`).join('');
+  document.getElementById('perfGoals').innerHTML =
+    d.goals.performance.map(g => `<li><b style="color:var(--accent)">${g.year}</b> — ${g.goal}</li>`).join('');
+  document.getElementById('healthGoals').innerHTML =
+    d.goals.firstPriority.map(g => `<li>${g}</li>`).join('');
+}
+
+function renderTrail(d) {
+  const t = d.trail;
+  document.getElementById('trailBanner').innerHTML = `
+    <div class="rb-top">
+      <div><div class="rb-name">⛰️ ${t.race.name}</div>
+      <div class="rb-sub">${t.race.distance}km · ${t.race.elevation}m 爬升 · 体感跑</div></div>
+      <div class="rb-count"><div class="n">${daysTo(t.race.date)}</div><div class="l">天 · ${t.race.date}</div></div>
+    </div>
+    <div class="verdict">${t.verdict}</div>`;
+
+  const labels = t.progression.map(p => p.label);
+  new Chart(document.getElementById('trailProgChart'), {
+    data: {
+      labels,
+      datasets: [
+        { type: 'bar', label: '爬升 (m)', data: t.progression.map(p => p.elevation), yAxisID: 'y1',
+          backgroundColor: t.progression.map(p => p.status === 'race' ? 'rgba(248,81,73,.55)' : p.status === 'done' ? 'rgba(240,136,62,.5)' : 'rgba(139,151,166,.3)'), borderRadius: 4 },
+        { type: 'line', label: '距离 (km)', data: t.progression.map(p => p.distance), yAxisID: 'y',
+          borderColor: C.accent, backgroundColor: C.accent, tension: .3, pointRadius: 5,
+          pointBackgroundColor: t.progression.map(p => p.status === 'race' ? C.red : C.accent) },
+      ],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { boxWidth: 12 } } },
+      scales: { y: { position: 'left', title: { display: true, text: 'km' } },
+        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'm 爬升' } } } },
+  });
+
+  document.getElementById('ankleTargetLbl').textContent = '目标 ' + t.ankleTarget + 's';
+  new Chart(document.getElementById('ankleChart'), {
+    type: 'line',
+    data: {
+      labels: t.ankle.map(a => a.date),
+      datasets: [
+        { label: '右脚', data: t.ankle.map(a => a.right), borderColor: C.green, tension: .3, pointRadius: 5 },
+        { label: '左脚', data: t.ankle.map(a => a.left), borderColor: C.red, tension: .3, pointRadius: 5 },
+        { label: '目标', data: t.ankle.map(() => t.ankleTarget), borderColor: C.muted, borderDash: [6, 6], pointRadius: 0 },
+      ],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { boxWidth: 12 } } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: '秒' } } } },
+  });
+
+  document.getElementById('trailGaps').innerHTML = t.gaps.map(g =>
+    `<div class="injury" style="padding:9px 0;border-bottom:1px solid var(--border)">
+      <div class="name">${g.name}<span class="badge ${g.sev}">${g.sev === 'high' ? '高' : '中'}</span></div>
+      <div class="note">${g.note}</div></div>`).join('');
+  document.getElementById('downhillList').innerHTML = t.downhill.map(x => `<li>${x}</li>`).join('');
+  document.getElementById('trailPlanTable').innerHTML =
+    '<tr><th>周</th><th>日期</th><th>目标</th><th>状态</th><th>备注</th></tr>' +
+    t.plan.map(p => {
+      const lbl = { done: '✅ 完成', skipped: '— 跳过', next: '➡ 下一个', plan: '○ 计划', race: '🏁 比赛' }[p.status];
+      return `<tr><td><b>${p.week}</b></td><td>${p.date}</td><td>${p.target}</td><td><span class="badge ${p.status}">${lbl}</span></td><td style="color:var(--muted)">${p.note}</td></tr>`;
+    }).join('');
+}
+
+function renderHyrox(d) {
+  const h = d.hyrox;
+  document.getElementById('hyroxBanner').innerHTML = `
+    <div class="rb-top">
+      <div><div class="rb-name">🔥 ${h.race.name}</div><div class="rb-sub profile-tag">${h.profile}</div>
+      <span class="badge next" style="margin-top:8px">${h.status} · ${h.race.location}</span></div>
+      <div class="rb-count"><div class="n" style="color:var(--hyrox1)">${daysTo(h.race.date)}</div><div class="l">天 · ${h.race.date}</div></div>
+    </div>
+    <div class="status-note" style="margin-top:12px">${h.statusNote}</div>`;
+
+  new Chart(document.getElementById('hyroxRadar'), {
+    type: 'radar',
+    data: {
+      labels: h.radar.map(s => s.station),
+      datasets: [{
+        label: '相对强度', data: h.radar.map(s => s.score),
+        borderColor: C.blue, backgroundColor: 'rgba(88,166,255,.22)',
+        pointBackgroundColor: h.radar.map(s => s.score >= 60 ? C.green : s.score >= 45 ? C.yellow : C.red),
+        pointRadius: 4, borderWidth: 2,
+      }],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.r + ' / 100' } } },
+      scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, backdropColor: 'transparent', color: C.muted },
+        grid: { color: C.grid }, angleLines: { color: C.grid }, pointLabels: { color: C.muted, font: { size: 11 } } } } },
+  });
+
+  document.getElementById('hyroxEstimate').textContent = h.estimate.likely;
+  document.getElementById('hyroxEstRange').textContent = `乐观 ${h.estimate.optimistic} · 保守 ${h.estimate.conservative}`;
+  document.getElementById('hyroxBottlenecks').innerHTML = h.bottlenecks.map(b =>
+    `<div class="bottleneck" style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div class="rank">${b.rank}</div>
+      <div><div style="font-weight:600;font-size:14px">${b.name}</div><div style="color:var(--muted);font-size:13px">${b.note}</div></div>
+    </div>`).join('');
+  document.getElementById('hyroxRoi').innerHTML = '💡 <b>最高 ROI：</b>' + h.roi;
+  document.getElementById('hyroxBaseTable').innerHTML =
+    '<tr><th>站点</th><th>日期</th><th>记录</th></tr>' +
+    h.baselines.map(b => `<tr><td><b>${b.station}</b></td><td style="color:var(--muted)">${b.date}</td><td>${b.detail}</td></tr>`).join('');
+}
+
+function renderVl(d) {
+  d.strength.vlHistory.forEach((ex, i) => {
+    const isMain = ex.tier === 'main';
+    const wrap = document.getElementById(isMain ? 'vlChartsMain' : 'vlChartsAcc');
+    const first = ex.points[0].vl, last = ex.points.at(-1).vl;
+    const pct = Math.round(((last - first) / first) * 100);
+    const div = document.createElement('div');
+    div.className = 'card chart-card';
+    div.innerHTML = `<h3>${ex.name}<span class="delta" style="color:${pct >= 0 ? C.green : C.yellow}">${pct >= 0 ? '+' : ''}${pct}%</span></h3><div class="chart-box" style="height:${isMain ? 170 : 120}px"><canvas id="vl${i}"></canvas></div>`;
+    wrap.appendChild(div);
+    const color = isMain ? C.accent : C.blue;
+    new Chart(div.querySelector('canvas'), {
+      type: 'line',
+      data: { labels: ex.points.map(p => p.week), datasets: [{ data: ex.points.map(p => p.vl),
+        borderColor: color, backgroundColor: isMain ? 'rgba(240,136,62,.12)' : 'rgba(88,166,255,.08)',
+        fill: true, tension: .3, pointRadius: isMain ? 4 : 3, pointBackgroundColor: color }] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ex.points[ctx.dataIndex].scheme + ' = ' + ctx.parsed.y } } },
+        scales: { y: { beginAtZero: true } } },
+    });
+  });
+}
+function renderProgress(d) {
+  const header = '<tr><th>动作</th><th>起点</th><th>当前</th><th>VL 起→现</th><th>下一目标</th></tr>';
+  const row = p => `<tr><td><b>${p.name}</b></td><td>${p.start}</td><td>${p.current}</td><td>${p.vl}</td><td style="color:var(--muted)">${p.next}</td></tr>`;
+  document.getElementById('progressTableMain').innerHTML = header + d.strength.progress.filter(p => p.tier === 'main').map(row).join('');
+  document.getElementById('progressTableAcc').innerHTML = header + d.strength.progress.filter(p => p.tier === 'accessory').map(row).join('');
+}
+
+function renderRunning(d) {
+  const weeks = d.weeklyRun.filter(w => w.runKm > 0), [lo, hi] = d.weeklyRunTarget;
+  new Chart(document.getElementById('weeklyRunChart'), {
+    type: 'bar',
+    data: { labels: weeks.map(w => w.week.replace('2026-', '')), datasets: [{ data: weeks.map(w => w.runKm),
+      backgroundColor: weeks.map(w => w.runKm > hi * 1.3 ? C.yellow : C.blue), borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' km' } } },
+      scales: { y: { beginAtZero: true } } },
+  });
+  document.getElementById('activityTable').innerHTML =
+    '<tr><th>日期</th><th>训练</th><th>量</th><th>Readiness</th></tr>' +
+    [...d.recentActivities].reverse().map(a => `<tr><td style="color:var(--muted)">${a.date}</td><td>${a.training}</td><td>${a.distance && a.distance !== '—' ? a.distance : a.duration}</td><td>${a.readiness}</td></tr>`).join('');
+}
+
+function renderRecovery(d) {
+  const r = d.recovery, labels = r.map(x => x.date.slice(5));
+  new Chart(document.getElementById('hrvChart'), {
+    type: 'line', data: { labels, datasets: [
+      { label: 'HRV (ms)', data: r.map(x => x.hrv), borderColor: C.green, tension: .3, pointRadius: 2, yAxisID: 'y' },
+      { label: 'RHR (bpm)', data: r.map(x => x.rhr), borderColor: C.red, tension: .3, pointRadius: 2, yAxisID: 'y1' } ] },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } },
+      plugins: { legend: { labels: { boxWidth: 12 } } } },
+  });
+  new Chart(document.getElementById('sleepChart'), {
+    type: 'line', data: { labels, datasets: [
+      { label: '睡眠评分', data: r.map(x => x.sleep), borderColor: C.blue, tension: .3, pointRadius: 2, yAxisID: 'y' },
+      { label: 'Readiness', data: r.map(x => x.readiness), borderColor: C.accent, tension: .3, pointRadius: 2, yAxisID: 'y1' } ] },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { position: 'left', min: 50, max: 100 }, y1: { position: 'right', min: 0, max: 10, grid: { drawOnChartArea: false } } },
+      plugins: { legend: { labels: { boxWidth: 12 } } } },
+  });
+}
+
+function renderPhysio(d) {
+  const p = d.physio;
+  document.getElementById('lthr').textContent = p.lthr;
+  document.getElementById('zoneTable').innerHTML = '<tr><th>区间</th><th>BPM</th><th>用途</th></tr>' +
+    p.hrZones.map(z => `<tr><td><b>${z.zone}</b></td><td>${z.bpm}</td><td style="color:var(--muted)">${z.use}</td></tr>`).join('');
+  document.getElementById('baselineTable').innerHTML =
+    `<tr><td>睡眠评分</td><td>${p.baselines.sleep}</td></tr><tr><td>静息心率</td><td>${p.baselines.rhr}</td></tr>
+     <tr><td>HRV</td><td>${p.baselines.hrv}</td></tr><tr><td>LT 配速</td><td>${p.ltPace}</td></tr>
+     <tr><td>Easy 配速</td><td>${p.easyPace}</td></tr><tr><td>最大心率</td><td>${p.maxHr} bpm</td></tr>`;
+  const w = d.body.weights;
+  if (w.length) {
+    document.getElementById('weightDelta').textContent = `${(w.at(-1).kg - w[0].kg).toFixed(1)}kg（${w[0].date.slice(5)} 起）`;
+    new Chart(document.getElementById('weightChart'), {
+      type: 'line', data: { labels: w.map(x => x.date.slice(5)), datasets: [{ data: w.map(x => x.kg),
+        borderColor: C.blue, backgroundColor: 'rgba(88,166,255,.1)', fill: true, tension: .3, pointRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+    });
+  }
+  const n = p.nutrition;
+  document.getElementById('nutritionTable').innerHTML =
+    `<tr><td>蛋白质</td><td>${n.protein}</td></tr><tr><td>热量</td><td>${n.calories}</td></tr>
+     <tr><td>策略</td><td>${n.deficit}</td></tr><tr><td>补剂</td><td>${n.notes}</td></tr>`;
+  const m = d.body.measurements;
+  if (m.length) {
+    const cols = ['date', '肩围', '胸围', '上臂松', '上臂屈', '腰围', '臀围', '大腿', '小腿', '体重'];
+    document.getElementById('bodyTable').innerHTML =
+      '<tr>' + cols.map(c => `<th>${c === 'date' ? '日期' : c}</th>`).join('') + '</tr>' +
+      m.map(row => '<tr>' + cols.map(c => `<td>${row[c] ?? ''}</td>`).join('') + '</tr>').join('');
+  }
+}
+
+function renderRehab(d) {
+  const labels = { resolved: '✅ 已解决', treating: '🔧 治疗中', watching: '👁 观察中' };
+  document.getElementById('injuryCards').innerHTML = d.injuries.map(i =>
+    `<div class="card injury"><div class="name">${i.name}<span class="badge ${i.status}">${labels[i.status]}</span></div>
+      <div class="note">${i.note}</div></div>`).join('');
+}
+
+function setupNav() {
+  const links = document.querySelectorAll('nav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+  window.addEventListener('scroll', () => {
+    let idx = 0;
+    sections.forEach((s, i) => { if (s && s.getBoundingClientRect().top < 100) idx = i; });
+    links.forEach((l, i) => l.classList.toggle('active', i === idx));
+  }, { passive: true });
+}
+</script>
+</body>
+</html>

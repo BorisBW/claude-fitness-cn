@@ -1,0 +1,11 @@
+{
+  "name": "fitness-data-hub",
+  "private": true,
+  "description": "Mobile-browsable training dashboard generated from local Obsidian files",
+  "scripts": {
+    "sample": "node scripts/make-sample.mjs",
+    "data": "node scripts/build-data.mjs",
+    "dev": "npm run data && npx serve public",
+    "deploy": "npm run data && npx vercel deploy --prod --yes"
+  }
+}

@@ -1,206 +1,170 @@
 # Claude Fitness Coach (Coach Paddy)
 
-A data-driven fitness coaching skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) powered by Garmin data via MCP.
-
-Coach Paddy pulls your sleep, HRV, heart rate, body battery, and training data from Garmin Connect and turns it into actionable coaching — morning readiness reports, evening training recaps, weekly reviews, and adaptive training plans.
+A data-driven, multi-sport AI fitness coach for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Coach Paddy reads your watch + strength-log data, turns it into actionable coaching (morning readiness, evening recaps, weekly reviews, adaptive plans), records everything in **plain-text local files you own**, and surfaces it all in a **mobile dashboard you can deploy to Vercel**.
 
 **[中文说明见下方](#中文说明)**
 
-## What It Does
+---
 
-| Command | When | What |
+## Three data sources
+
+Coach Paddy is built around three feeds, each handling what it does best:
+
+| Source | What it provides | How |
 |---|---|---|
-| `/fitness-coach` | Anytime | Free chat — training, nutrition, race strategy |
-| `/fitness-coach morning` | Wake up | Readiness Score (1-10) + today's plan + nutrition tips |
-| `/fitness-coach evening` | Post-training | Training analysis + Race Confidence Score + injury check |
-| `/fitness-coach weekly` | End of week | Volume trends + ACWR + next week plan |
-| `/fitness-coach plan` | As needed | Generate/update training plan |
+| **Garmin (佳明)** | Sleep, HRV, RHR, Body Battery, training load, ACWR, VO₂max, activities | [Garmin MCP](https://github.com/Taxuspt/garmin_mcp) · [China fork](https://github.com/BorisBW/garmin-mcp-cn) for `garmin.cn` |
+| **Coros (高驰)** | Alternative / second-watch recovery + activity data (sleep, daily metrics, activities) | Coros MCP |
+| **Xunji (训记)** | Strength-training log — read & write sets/reps/weight, Volume Load tracking | Xunji Open API v2 (token via env var) |
 
-### Key Features
-- **Readiness Score** (1-10): Combines sleep, HRV, RHR, Body Battery, and injury status
-- **Race Confidence Score** (0-100%): 4-factor formula tracking injury (40%), load compliance (25%), fitness (25%), recovery (10%)
-- **ACWR Monitoring**: Acute:Chronic Workload Ratio to prevent overtraining
-- **Obsidian Integration**: All data persisted in markdown files for full ownership
-- **Multilingual**: Responds in whatever language you write in
+> Garmin and Coros are interchangeable for recovery/running data — use whichever watch you wear (or both, for dual-watch comparison). Xunji is the strength layer: the coach reads your logged lifts and writes new sessions back.
 
-## Prerequisites
+## Core logic
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (CLI)
-- A Garmin watch + Garmin Connect account
-- [Garmin MCP Server](https://github.com/Taxuspt/garmin_mcp) (or [China fork](https://github.com/BorisBW/garmin-mcp-cn) for `garmin.cn` users)
-- [Obsidian](https://obsidian.md/) (optional but recommended for persistent memory)
+Everything is a transparent, tweakable formula in [`fitness-coach.md`](fitness-coach.md) — no black box.
+
+- **Readiness Score (1-10)** — base 5, adjusted by sleep, HRV status vs. baseline, Body Battery, RHR trend, and active injury. Drives whether today is a full, reduced, or rest day.
+- **Race Confidence Score (0-100%)** — `Injury(40%) + Load(25%) + Fitness(25%) + Recovery(10%)`. Triggers a plan pivot if it drops too far.
+- **ACWR** — Acute:Chronic Workload Ratio read **directly from Garmin** (HR + training-effect based, not mileage-estimated). Safe band 0.8–1.3.
+- **Volume Load** — `weight × total working reps` per lift, tracked over weeks so progress shows even when the weight doesn't change. Main lifts are tracked separately from accessories.
+
+## Local-first recording
+
+No proprietary app database. Every report is read from and written back to markdown files in your own [Obsidian](https://obsidian.md/) vault:
+
+```
+Fitness/
+├── Coach Memory.md      # Athlete profile, history, baselines, nutrition, injury log
+├── Training Plan.md     # Current plan + strength progress + Volume Load history
+├── Recovery Log.md      # Daily: sleep / HRV / RHR / Body Battery / readiness
+└── Logs/                # Weekly training logs (morning + evening detail)
+    └── 2026-W10 (Mar02-Mar08).md
+```
+
+You own the data, it's diff-able in git, and it's portable. Templates are in [`examples/`](examples/).
+
+## Mobile dashboard (deploy to Vercel)
+
+The [`dashboard/`](dashboard/) folder is a static single-page app that parses those same local files into a phone-friendly dashboard — race countdowns, Volume Load charts, recovery trends, a Hyrox station radar, trail-prep tracker, and more. Deploy it to Vercel and check your training from anywhere.
+
+```bash
+cd dashboard
+npm run sample          # synthetic demo data
+npx vercel deploy --prod
+```
+
+Your real `data.json` is generated locally and git-ignored — the public deploy only ever shows synthetic sample data. See [`dashboard/README.md`](dashboard/README.md).
+
+---
 
 ## Setup
 
-### 1. Install Garmin MCP Server
+### 1. Install a watch MCP server
 
-**Global users:**
+**Garmin (global):**
 ```bash
 uvx --python 3.12 --from git+https://github.com/Taxuspt/garmin_mcp garmin-mcp-auth
 ```
-
-**China (garmin.cn) users:**
+**Garmin (China, `garmin.cn`):**
 ```bash
 GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/BorisBW/garmin-mcp-cn garmin-mcp-auth
 ```
+**Coros:** add your Coros MCP server to `~/.claude/settings.json` the same way.
 
-### 2. Configure MCP in Claude Code
-
-Add to `~/.claude/settings.json`:
+### 2. Register the MCP server(s) in `~/.claude/settings.json`
 
 ```json
 {
   "mcpServers": {
     "garmin": {
       "command": "uvx",
-      "args": [
-        "--python", "3.12",
-        "--from", "git+https://github.com/Taxuspt/garmin_mcp",
-        "garmin-mcp"
-      ]
+      "args": ["--python", "3.12", "--from", "git+https://github.com/Taxuspt/garmin_mcp", "garmin-mcp"]
     }
   }
 }
 ```
+> China users: swap the repo for `git+https://github.com/BorisBW/garmin-mcp-cn` and add `"env": {"GARMIN_IS_CN": "true"}`.
 
-> For China users, replace the repo URL with `git+https://github.com/BorisBW/garmin-mcp-cn` and add `"env": {"GARMIN_IS_CN": "true"}`.
+### 3. (Optional) Xunji strength logging
 
-### 3. Install the Skill
+Set your Xunji API token as an environment variable — **never hard-code it**:
+```bash
+export XUNJI_TOKEN="xjllm_xxxxxxxx"
+```
+The skill calls the Xunji Open API with `Authorization: Bearer $XUNJI_TOKEN`. Movement-name mappings are in [`xunji-movements.md`](xunji-movements.md).
 
-Copy the skill file to your Claude Code commands directory:
+### 4. Install the skill
 
 ```bash
 cp fitness-coach.md ~/.claude/commands/fitness-coach.md
 ```
+Then edit the **Athlete Profile** and **Memory Files** paths in `fitness-coach.md` to match your sport and vault.
 
-### 4. Set Up Memory Files (Optional)
-
-Create your Obsidian vault structure:
-
-```
-Fitness/
-├── Coach Memory.md      # Persistent athlete profile & history
-├── Training Plan.md     # Current training plan
-├── Recovery Log.md      # Daily recovery tracking
-└── Logs/                # Weekly training logs
-    └── 2026-W10 (Mar02-Mar08).md
-```
-
-Templates for each file are in the `examples/` directory. Copy them to your vault and customize.
-
-Then update the file paths in `fitness-coach.md` under "Memory Files" to match your vault location.
-
-### 5. Use It
+### 5. Use it
 
 ```bash
 claude
-> /fitness-coach morning
+> /fitness-coach morning      # readiness report before training
+> /fitness-coach evening      # training recap + injury check after
+> /fitness-coach weekly       # volume + ACWR + strength progress review
 ```
 
-## File Structure
+## Commands
+
+| Command | When | What |
+|---|---|---|
+| `/fitness-coach` | Anytime | Free chat — training, nutrition, race strategy |
+| `/fitness-coach morning` | Wake up | Readiness Score + today's plan |
+| `/fitness-coach evening` | Post-training | Analysis + Race Confidence + injury check + logs to Obsidian (+ Xunji write-back for strength) |
+| `/fitness-coach weekly` | End of week | Volume trends + ACWR + Volume Load progress |
+| `/fitness-coach plan` | As needed | Generate/update training plan |
+
+## Repo structure
 
 ```
 claude-fitness-cn/
 ├── README.md
-├── fitness-coach.md           # The main skill (copy to ~/.claude/commands/)
-└── examples/
-    ├── coach-memory.md        # Template: athlete profile & history
-    ├── training-plan.md       # Template: weekly training plan
-    └── recovery-log.md        # Template: daily recovery tracking
+├── fitness-coach.md        # The skill (copy to ~/.claude/commands/)
+├── xunji-movements.md      # Strength movement name reference
+├── examples/               # Obsidian memory-file templates
+│   ├── coach-memory.md
+│   ├── training-plan.md
+│   └── recovery-log.md
+└── dashboard/              # Vercel-deployable mobile dashboard
+    ├── public/index.html
+    ├── scripts/build-data.mjs
+    └── scripts/make-sample.mjs
 ```
-
-## How It Works
-
-```
-┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Garmin MCP  │────▶│  Coach Paddy │────▶│   Obsidian   │
-│  (95+ tools) │     │  (Skill .md) │     │  (Memory)    │
-└─────────────┘     └──────────────┘     └──────────────┘
-      │                     │                     │
-  Sleep, HRV,         Readiness Score,      Coach Memory,
-  HR, Battery,        Race Confidence,      Training Plan,
-  Activities          ACWR, Analysis        Recovery Log
-```
-
-**Data flow:**
-1. Garmin watch → Garmin Connect → Garmin MCP Server → Claude Code
-2. Claude Code + Coach Paddy skill → reads memory files → pulls Garmin data → generates report
-3. Report → displayed to user + written to Obsidian files
-
-## Customization
-
-The skill is designed to be customized. Key sections to edit in `fitness-coach.md`:
-
-| Section | What to Change |
-|---|---|
-| Athlete Profile | Your sport, cross-training, injury history |
-| Memory Files | Paths to your Obsidian vault |
-| RPE Estimation Rules | HR zones for your fitness level |
-| Recovery Thresholds | Baseline values for your metrics |
-| Race Confidence factors | Weight and thresholds for your goals |
-
-## Algorithms
-
-### Readiness Score (1-10)
-Base score of 5, adjusted by: sleep quality (+2 to -2), HRV status (+1 to -2), Body Battery charge (+2 to -2), RHR trend (+1/-1), and active injury (-1). See full algorithm in the skill file.
-
-### Race Confidence Score (0-100%)
-```
-Confidence = Injury(40%) + Load(25%) + Fitness(25%) + Recovery(10%)
-```
-- **Injury**: Pain scale → percentage (cleared = 100%, pain 4+/10 = 20%)
-- **Load**: Average weekly volume completion rate
-- **Fitness**: Session completion (40%) + threshold quality (30%) + long run efficiency (30%)
-- **Recovery**: 7-day HRV trend
-
-### ACWR (Acute:Chronic Workload Ratio)
-- ATL = 7-day average session load
-- CTL = 28-day average session load
-- Safe range: 0.8–1.3
 
 ---
 
 ## 中文说明
 
-这是一个基于 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 的 AI 健身教练技能，通过 Garmin MCP 服务器读取你的手表数据（睡眠、HRV、心率、Body Battery、训练记录），提供数据驱动的教练服务。
+基于 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 的数据驱动多项目 AI 健身教练。Coach Paddy 读取你的手表 + 力量训练数据，转化为可执行的教练建议（晨间准备度、训练后复盘、周度回顾、自适应计划），把一切记录在**你自己拥有的纯文本本地文件**里，并通过**可部署到 Vercel 的手机端 dashboard** 随时浏览。
 
-### 功能
+### 三个数据源
 
-| 命令 | 时机 | 内容 |
+| 来源 | 提供数据 | 方式 |
 |---|---|---|
-| `/fitness-coach` | 随时 | 自由聊天 — 训练、营养、比赛策略 |
-| `/fitness-coach morning` | 起床后 | 准备度评分 (1-10) + 今日计划 + 营养建议 |
-| `/fitness-coach evening` | 训练后 | 训练分析 + 比赛信心评分 + 伤病检查 |
-| `/fitness-coach weekly` | 周末 | 周度趋势 + ACWR + 下周计划 |
-| `/fitness-coach plan` | 需要时 | 生成/更新训练计划 |
+| **佳明 Garmin** | 睡眠、HRV、静息心率、Body Battery、训练负荷、ACWR、VO₂max、活动 | [Garmin MCP](https://github.com/Taxuspt/garmin_mcp) · [中国区 fork](https://github.com/BorisBW/garmin-mcp-cn) |
+| **高驰 Coros** | 备用/双表的恢复与活动数据（睡眠、每日指标、活动） | Coros MCP |
+| **训记 Xunji** | 力量训练记录 — 读写组数/次数/重量，Volume Load 追踪 | 训记开放 API v2（token 走环境变量） |
 
-### 安装步骤
+> 佳明和高驰在恢复/跑步数据上可互换，戴哪块用哪块（或双表对比）。训记是力量层：教练读取你记录的训练，并把新的训练写回。
 
-1. **安装 Garmin MCP 服务器**（中国区用户）：
-   ```bash
-   GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/BorisBW/garmin-mcp-cn garmin-mcp-auth
-   ```
+### 核心逻辑（全部为透明可调的公式，见 `fitness-coach.md`）
 
-2. **配置 Claude Code MCP**：在 `~/.claude/settings.json` 添加 Garmin MCP 服务器（见上方英文说明）
+- **准备度评分 (1-10)**：基准 5 分，按睡眠、HRV 状态、Body Battery、RHR 趋势、伤病调整 → 决定今天全力/降量/休息
+- **比赛信心评分 (0-100%)**：伤病(40%) + 负荷(25%) + 竞技状态(25%) + 恢复(10%)，过低触发计划调整
+- **ACWR**：急性:慢性负荷比，直接读 Garmin（基于心率+训练效果，比里程估算准），安全区 0.8–1.3
+- **Volume Load**：每个动作 `重量 × 总工作次数`，按周追踪，重量没涨也能看到容量进步；大项与辅助分开追踪
 
-3. **安装技能文件**：
-   ```bash
-   cp fitness-coach.md ~/.claude/commands/fitness-coach.md
-   ```
+### 本地优先的记录方式
 
-4. **设置记忆文件**（可选）：将 `examples/` 下的模板复制到你的 Obsidian 笔记库，修改 `fitness-coach.md` 中的文件路径
+没有私有 app 数据库，所有报告读写自你自己的 Obsidian 笔记库（`Coach Memory.md` / `Training Plan.md` / `Recovery Log.md` / `Logs/`）。数据你拥有、可 git diff、可迁移。模板见 `examples/`。
 
-5. **开始使用**：
-   ```bash
-   claude
-   > /fitness-coach morning
-   ```
+### 手机端 Dashboard
 
-### 核心算法
-
-- **准备度评分 (1-10)**：综合睡眠、HRV、RHR、Body Battery 和伤病状态
-- **比赛信心评分 (0-100%)**：伤病 (40%) + 训练量达标率 (25%) + 竞技状态 (25%) + 恢复质量 (10%)
-- **ACWR 监控**：急性-慢性负荷比，安全区间 0.8-1.3
+`dashboard/` 是一个静态单页应用，把上述本地文件解析成手机友好的仪表盘（比赛倒计时、Volume Load 图表、恢复趋势、Hyrox 站点雷达、越野备赛追踪等），部署到 Vercel 随时随地查看。真实 `data.json` 本地生成且被 git 忽略，公开部署只展示合成示例数据。
 
 ---
 
