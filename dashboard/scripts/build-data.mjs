@@ -5,12 +5,12 @@
 // Usage:  FITNESS_DIR="/path/to/vault/Fitness" node scripts/build-data.mjs
 //
 // The PARSER functions below are generic — they read the markdown table
-// formats produced by the Coach Paddy skill (Recovery Log / Training Plan /
+// formats produced by the Coach Paddy skill (Athlete Bio Data / Training Plan /
 // Coach Memory / weekly Logs). The `curated` object at the bottom is the
 // hand-maintained data (injuries / goals / PBs / race plans) — edit it for
 // your own training, then re-run this script.
 
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -26,9 +26,17 @@ const firstNum = (s) => {
   return m ? parseFloat(m[0]) : null;
 };
 
-// ---------- 1. Recovery Log: daily recovery rows ----------
+// ---------- 1. Athlete Bio Data: daily recovery rows ----------
+// The file was called "Recovery Log.md" in earlier versions of the skill;
+// prefer the current name and fall back so existing vaults keep working.
+function bioDataPath() {
+  const current = join(FITNESS_DIR, 'Athlete Bio Data.md');
+  const legacy = join(FITNESS_DIR, 'Recovery Log.md');
+  return existsSync(current) ? current : legacy;
+}
+
 function parseRecovery() {
-  const raw = readFileSync(join(FITNESS_DIR, 'Recovery Log.md'), 'utf8');
+  const raw = readFileSync(bioDataPath(), 'utf8');
   const daily = raw.split('## 每日更新')[1] ?? '';
   const rows = [];
   for (const line of daily.split('\n')) {

@@ -1,4 +1,4 @@
-# Recovery Log
+# Athlete Bio Data
 
 > Daily recovery tracking. Coach Paddy updates this file during morning and evening reports.
 
