@@ -77,6 +77,22 @@ Your real `data.json` is generated locally and git-ignored — the public deploy
 
 ## Setup
 
+> **Installing this with an AI agent?** Point it at this repo and it can do the whole thing.
+> The two rules it must not get wrong:
+>
+> 1. **`fitness-coach.md` is always installed.** It holds all the coaching logic.
+> 2. **`apple-watch-fitness-coach.md` is an add-on, never a replacement.** It only overrides the
+>    data source and the Readiness formula, and is useless on its own. Install it *in addition to*
+>    the main skill, and only for Apple Watch users.
+>
+> | Wearable | Install | Then connect |
+> |---|---|---|
+> | Garmin / Coros / WHOOP | `fitness-coach.md` | the matching MCP server (step 1) |
+> | Apple Watch | `fitness-coach.md` **and** `apple-watch-fitness-coach.md` | no MCP — set up the Shortcut (step 1) |
+>
+> Ask the user which wearable they own before choosing. If they own more than one, ask which is
+> the primary — recovery metrics must all come from a single device or the SWC baselines drift.
+
 ### 1. Connect your wearable
 
 Pick the one you actually wear. Only Apple Watch needs a different route.
@@ -302,6 +318,20 @@ app、不需要建服务器**。它用[独立的适配器 skill](apple-watch-fit
 | 来源 | 提供数据 | 方式 |
 |---|---|---|
 | **训记 Xunji** | 力量训练记录 — 读写组数/次数/重量，Volume Load 追踪 | 训记开放 API v2（token 走环境变量） |
+
+### 安装（两个 skill 的关系）
+
+大多数人是直接把这个 repo 链接丢给 agent 让它自己装。两条不能搞错：
+
+1. **`fitness-coach.md` 永远要装**，教练逻辑全在里面
+2. **`apple-watch-fitness-coach.md` 是附加，不是替代**——它只覆盖数据源和 Readiness 公式，单独装等于空转。Apple Watch 用户要**两个都装**
+
+| 设备 | 装哪些 | 再连什么 |
+|---|---|---|
+| 佳明 / 高驰 / WHOOP | `fitness-coach.md` | 对应的 MCP server |
+| Apple Watch | `fitness-coach.md` **+** `apple-watch-fitness-coach.md` | 不用 MCP，配快捷指令 |
+
+装之前先问用户戴哪块表。戴不止一块的话要问哪块是主表——恢复类指标必须全部来自同一块，否则 SWC 基线会漂。
 
 ### 核心逻辑（全部为透明可调的公式，见 `fitness-coach.md`）
 
