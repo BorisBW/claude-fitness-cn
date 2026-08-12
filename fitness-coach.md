@@ -545,7 +545,7 @@ you add a row to the mapping table, and the Readiness / recap / weekly logic sta
 |---|---|---|---|---|---|---|
 | **Garmin** | `get_sleep_summary` | `get_hrv_data` | `get_heart_rates_summary` | `get_body_battery` | `get_training_status` (`load_ratio`) | `get_activities_fordate` + `get_activity_splits` |
 | **Coros** | `get_sleep_data` | `get_daily_metrics` | `get_daily_metrics` | — | — | `list_activities` + `get_activity_detail` |
-| **WHOOP** | `whoop_get_sleep` / `whoop_list_sleeps` | `whoop_list_recoveries` (HRV) | `whoop_list_recoveries` (RHR) | `whoop_list_recoveries` (recovery %) | `whoop_list_cycles` (day strain) ⚠️ | `whoop_list_workouts` + `whoop_get_workout` |
+| **WHOOP** | `get_sleep_collection` | `get_recovery_collection` (HRV) | `get_recovery_collection` (RHR) | `get_recovery_collection` (recovery %) | `get_cycle_collection` (day strain) ⚠️ | `get_workout_collection` + `get_workout_by_id` |
 | **Apple Watch** | duration only | ✅ | ✅ | ❌ | ❌ | summary only, no splits | 
 
 > **Apple Watch runs a separate skill** (`apple-watch-fitness-coach`) because its pipeline and its
@@ -565,17 +565,27 @@ accounts live on `teamcnapi.coros.com` and must authenticate with `region="cn"`.
 
 **WHOOP** — the closest thing to Garmin outside Garmin, because WHOOP has a real cloud REST API
 with OAuth, so the data pulls server-side with no phone in the loop. Recovery % is a genuine
-`energy` analogue (it's built from HRV, RHR and sleep, like Body Battery).
+`energy` analogue (it's built from HRV, RHR and sleep, like Body Battery). Requires an active
+paid membership.
+
+Two shortcuts worth using instead of assembling slots by hand:
+- **`get_today`** — one call returns recovery score, last night's sleep, current strain and the
+  last workout. Use it to open the **morning report** rather than making four separate calls.
+- **`get_calendar`** — day-by-day grid of recovery / sleep / strain over a range. Use it to build
+  the **28-day SWC baseline** for HRV.
+- `get_weekly_summary` and `get_trend` (which flags days deviating from personal baseline) are
+  useful in the **weekly review**.
+
+⚠️ **Collection calls cap at 25 records** (`limit` 1–25). The 28-day SWC baseline therefore can't
+come from a single `get_recovery_collection` call — either paginate with `nextToken` or use
+`get_calendar`. Silently scoring a "28-day" band off 25 days is the kind of quiet error that makes
+the whole HRV term untrustworthy.
 
 ⚠️ **WHOOP strain is not ACWR.** Day strain is a 0–21 logarithmic scale, not a ratio. To fill the
 `load` slot, compute the 7-day mean strain ÷ 28-day mean strain yourself and label it a *strain
 ratio*. It behaves like ACWR (both are HR-derived, unlike a mileage count) but the 0.8–1.3 band
 was calibrated on Garmin's number — treat it as directional, and don't quote it to two decimals
 as though it were the same measurement.
-
-`whoop_demo` returns synthetic payloads tagged `is_demo: true` — useful for checking the skill
-end-to-end before wiring up OAuth. Never let demo data reach a real report; if a payload carries
-`is_demo: true`, say so.
 
 ### Rules for filling slots
 

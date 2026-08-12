@@ -126,30 +126,44 @@ ACWR, so the Readiness algorithm runs its reduced form (see [Readiness](#core-lo
 <details>
 <summary><b>WHOOP</b></summary>
 
-Uses [`whoop-mcp-unofficial`](https://github.com/davidmosiah/whoop-mcp) (MIT). You need a WHOOP
+Uses [`whoop-ai-mcp`](https://github.com/shashankswe2020-ux/whoop-mcp) (MIT). You need a WHOOP
 developer app for the client id/secret — create one at [developer.whoop.com](https://developer.whoop.com/).
 
+The setup wizard writes the config for you:
 ```bash
-npx -y whoop-mcp-unofficial setup    # paste client id + secret
-npx -y whoop-mcp-unofficial auth     # browser OAuth
-npx -y whoop-mcp-unofficial doctor   # verify
+npx whoop-ai-mcp setup --client=claude-code --verify
 ```
+
+Or configure it by hand:
 ```json
 {
   "mcpServers": {
-    "whoop": { "command": "npx", "args": ["-y", "whoop-mcp-unofficial"] }
+    "whoop": {
+      "command": "npx",
+      "args": ["whoop-ai-mcp"],
+      "env": {
+        "WHOOP_CLIENT_ID": "your_client_id",
+        "WHOOP_CLIENT_SECRET": "your_client_secret"
+      }
+    }
   }
 }
 ```
-
-No WHOOP yet? `whoop_demo` returns synthetic payloads tagged `is_demo: true`, so you can see the
-whole flow before committing to OAuth.
+A browser opens for authorisation on first launch; tokens are cached locally and refresh
+automatically.
 
 ⚠️ **WHOOP strain is not ACWR** — it's a 0–21 logarithmic scale. The skill derives a 7d ÷ 28d
 *strain ratio* and labels it as such; it behaves like ACWR but the 0.8–1.3 band was calibrated on
 Garmin's number, so read it as directional.
 
+⚠️ Collection calls return at most 25 records, so the 28-day HRV baseline is built from
+`get_calendar` rather than a single collection call.
+
 ⚠️ WHOOP requires an active paid membership — the hardware is inert without one.
+
+> Alternative: [`whoop-mcp-unofficial`](https://github.com/davidmosiah/whoop-mcp) (also MIT) has
+> higher npm download volume and ships releases more frequently, but far less independent
+> validation. Tool names differ, so the skill's mapping table would need updating if you switch.
 </details>
 
 <details>
@@ -315,5 +329,5 @@ MIT — see [LICENSE](LICENSE).
 
 - [Garmin MCP Server](https://github.com/Taxuspt/garmin_mcp) by Taxuspt
 - [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) by cyberjunky
-- [whoop-mcp-unofficial](https://github.com/davidmosiah/whoop-mcp) by davidmosiah
+- [whoop-ai-mcp](https://github.com/shashankswe2020-ux/whoop-mcp) by shashankswe2020-ux
 - Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by Anthropic
