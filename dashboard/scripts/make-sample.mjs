@@ -9,150 +9,171 @@ import { fileURLToPath } from 'node:url';
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
-// 14 synthetic recovery days (deterministic, no real biometrics)
+// 30 synthetic recovery days (deterministic, seeded, no real biometrics)
 const recovery = [];
-const base = new Date('2026-05-30');
-const sleeps = [82, 78, 85, 90, 76, 88, 80, 84, 91, 79, 86, 82, 88, 83];
-const hrvs = [44, 41, 47, 52, 38, 50, 43, 46, 55, 40, 48, 45, 50, 47];
-const rhrs = [56, 57, 55, 54, 58, 55, 56, 55, 54, 57, 55, 56, 55, 57];
-for (let i = 0; i < 14; i++) {
+const base = new Date('2026-07-18');
+let seed = 20260816;
+const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+let balStreak = 14, vo2 = 58.0;
+for (let i = 0; i < 30; i++) {
   const d = new Date(base); d.setDate(base.getDate() + i);
+  const dip = (i >= 16 && i <= 19) ? 1 : 0; // heavy trap-bar/hip-thrust week fatigue dip
+  const sleep = Math.round(Math.min(95, Math.max(70, 86 + (rand() * 13 - 7) - dip * 3)));
+  const rhr = Math.round(Math.min(54, Math.max(40, 45 + (rand() * 6 - 3) + dip * 4)));
+  const hrv = Math.round(Math.min(82, Math.max(48, 68 + (rand() * 16 - 8) - dip * 14)));
+  const hrvStatus = hrv >= 60 ? 'BALANCED' : 'UNBALANCED';
+  balStreak = hrvStatus === 'BALANCED' ? balStreak + 1 : 0;
+  const acwr = Math.round((1.0 + (rand() * 0.4 - 0.2) + (i >= 14 && i <= 17 ? 0.15 : 0)) * 100) / 100;
+  if (i % 6 === 0 && i > 0) vo2 = Math.round((vo2 + 0.2) * 10) / 10;
+  let readiness = 5;
+  readiness += sleep >= 88 ? 2 : sleep >= 80 ? 1 : sleep >= 70 ? 0 : -1;
+  readiness += hrvStatus === 'BALANCED' ? 1 : -1;
+  readiness += rhr <= 45 ? 1 : 0;
+  readiness = Math.max(3, Math.min(10, readiness));
   recovery.push({
     date: d.toISOString().slice(0, 10),
-    sleep: sleeps[i], rhr: rhrs[i], hrv: hrvs[i],
-    hrvStatus: hrvs[i] >= 41 ? 'BALANCED' : 'UNBALANCED',
-    readiness: Math.max(4, Math.min(10, Math.round(hrvs[i] / 6))),
-    acwr: 0.9 + (i % 4) * 0.1, vo2: 52, balStreak: 10 + i,
+    sleep, rhr, hrv, hrvStatus, readiness, acwr, vo2, balStreak,
   });
 }
 
 const vlPts = (name, tier, arr) => ({ name, tier, points: arr.map(([week, date, scheme, vl]) => ({ week, date, scheme, vl })) });
 const strength = {
   progress: [
-    { tier: 'main', name: 'Barbell Hip Thrust', start: '25kg', current: '60kg×4×12', vl: '900→2,880 (+220%)', next: 'Try 65kg×3×12' },
-    { tier: 'main', name: 'DB Shoulder Press', start: '10-12kg', current: '14kg×4×10', vl: '440→560 (+27%)', next: 'Hold then 16kg' },
-    { tier: 'main', name: 'Single-arm Row', start: '12kg', current: '18kg×4×10', vl: '432→720 (+67%)', next: 'Hold then 20kg' },
-    { tier: 'accessory', name: 'Lateral Raise', start: '6kg×12', current: '6kg×4×15', vl: '216→360 (+67%)', next: '15 reps then 8kg' },
+    { tier: 'main', name: 'Barbell Hip Thrust', start: '40kg', current: '70kg×4×10', vl: '1,200→2,800 (+133%)', next: 'Try 75kg×3×10' },
+    { tier: 'main', name: 'Trap Bar Deadlift', start: '60kg×3×8', current: '100kg×4×6', vl: '1,440→2,400 (+67%)', next: 'Add 3rd heavy set @105kg' },
+    { tier: 'main', name: 'Weighted Pull-up', start: '+5kg×4×6', current: '+15kg×4×8', vl: '120→480 (+300%)', next: 'Hold volume, chase +17.5kg' },
+    { tier: 'accessory', name: 'DB Shoulder Press', start: '10kg×3×10', current: '16kg×4×8', vl: '300→512 (+71%)', next: 'Add 5th rep at 16kg' },
+    { tier: 'accessory', name: 'Lateral Raise', start: '5kg×12×3', current: '7kg×3×15', vl: '180→315 (+75%)', next: '15 reps clean then 8kg' },
   ],
   vlHistory: [
-    vlPts('Barbell Hip Thrust', 'main', [['W16', '4/16', '25×12×3', 900], ['W18', '4/29', '40×12×4', 1920], ['W19', '5/6', '50×12×4', 2400], ['W22', '5/27', '55×12×3', 1980], ['W23', '6/3', '60×12×3', 2160], ['W24', '6/10', '60×12×4', 2880]]),
-    vlPts('DB Shoulder Press', 'main', [['W16', '4/16', '10-12kg', 440], ['W19', '5/6', '12kg×43', 516], ['W22', '5/27', '14×10×3', 564], ['W24', '6/12', '14×4×10', 560]]),
-    vlPts('Single-arm Row', 'main', [['W17', '4/24', '12×12×3', 432], ['W19', '5/8', '16×10×4', 640], ['W24', '6/12', '18×10×4', 720]]),
-    vlPts('Lateral Raise', 'accessory', [['W19', '5/8', '6×12×3', 216], ['W20', '5/15', '6×15×3', 270], ['W23', '6/6', '6×15×4', 360]]),
+    vlPts('Barbell Hip Thrust', 'main', [['W25', '6/14', '40×10×3', 1200], ['W27', '6/28', '50×10×3', 1500], ['W29', '7/12', '55×10×4', 2200], ['W30', '7/19', '60×10×4', 2400], ['W32', '8/2', '65×10×4', 2600], ['W33', '8/9', '70×10×4', 2800]]),
+    vlPts('Trap Bar Deadlift', 'main', [['W25', '6/14', '60×8×3', 1440], ['W27', '6/28', '70×8×3', 1680], ['W29', '7/12', '80×6×4', 1920], ['W30', '7/19', '85×6×4', 2040], ['W32', '8/2', '90×6×4', 2160], ['W33', '8/9', '100×6×4', 2400]]),
+    vlPts('Weighted Pull-up', 'main', [['W25', '6/14', '+5kg×6×4', 120], ['W27', '6/28', '+7.5kg×6×4', 180], ['W29', '7/12', '+10kg×7×4', 280], ['W30', '7/19', '+10kg×8×4', 320], ['W32', '8/2', '+12.5kg×8×4', 400], ['W33', '8/9', '+15kg×8×4', 480]]),
+    vlPts('DB Shoulder Press', 'accessory', [['W25', '6/14', '10×10×3', 300], ['W28', '7/5', '12×10×3', 360], ['W30', '7/19', '14×9×3', 378], ['W33', '8/9', '16×8×4', 512]]),
+    vlPts('Lateral Raise', 'accessory', [['W25', '6/14', '5×12×3', 180], ['W28', '7/5', '6×12×3', 216], ['W31', '7/26', '6×15×3', 270], ['W33', '8/9', '7×15×3', 315]]),
   ],
 };
 
 const weeklyRun = [
-  { week: '2026-W18', range: 'Apr27-May03', runKm: 26.0 },
-  { week: '2026-W19', range: 'May04-May10', runKm: 38.2 },
-  { week: '2026-W20', range: 'May11-May17', runKm: 19.1 },
-  { week: '2026-W21', range: 'May18-May24', runKm: 47.0 },
-  { week: '2026-W22', range: 'May25-May31', runKm: 26.0 },
-  { week: '2026-W23', range: 'Jun01-Jun07', runKm: 38.5 },
-  { week: '2026-W24', range: 'Jun08-Jun14', runKm: 33.0 },
+  { week: '2026-W26', range: 'Jun22-Jun28', runKm: 48 },
+  { week: '2026-W27', range: 'Jun29-Jul05', runKm: 52 },
+  { week: '2026-W28', range: 'Jul06-Jul12', runKm: 58 },
+  { week: '2026-W29', range: 'Jul13-Jul19', runKm: 45 },
+  { week: '2026-W30', range: 'Jul20-Jul26', runKm: 60 },
+  { week: '2026-W31', range: 'Jul27-Aug02', runKm: 65 },
+  { week: '2026-W32', range: 'Aug03-Aug09', runKm: 68 },
+  { week: '2026-W33', range: 'Aug10-Aug16', runKm: 62 },
 ];
 const recentActivities = [
-  { week: '2026-W24', day: 'Mon', date: '6/8', training: 'Strength B+C', duration: '87min', distance: '—', readiness: '5/10' },
-  { week: '2026-W24', day: 'Tue', date: '6/9', training: 'Easy Run', duration: '60min', distance: '10.0km', readiness: '9/10' },
-  { week: '2026-W24', day: 'Wed', date: '6/10', training: 'Strength A (legs)', duration: '75min', distance: '—', readiness: '9/10' },
-  { week: '2026-W24', day: 'Thu', date: '6/11', training: 'Easy Run', duration: '49min', distance: '8.0km', readiness: '7/10' },
-  { week: '2026-W24', day: 'Fri', date: '6/12', training: 'Strength B+C', duration: '96min', distance: '—', readiness: '7/10' },
+  { week: '2026-W33', day: 'Mon', date: '8/10', training: 'Strength (Hyrox lower + hip thrust)', duration: '70min', distance: '—', readiness: '8/10' },
+  { week: '2026-W33', day: 'Tue', date: '8/11', training: 'Easy Run', duration: '55min', distance: '11.5km', readiness: '8/10' },
+  { week: '2026-W33', day: 'Wed', date: '8/12', training: 'Strength (pull + carries)', duration: '65min', distance: '—', readiness: '7/10' },
+  { week: '2026-W33', day: 'Thu', date: '8/13', training: 'Tempo Run', duration: '50min', distance: '12.0km', readiness: '8/10' },
+  { week: '2026-W33', day: 'Fri', date: '8/14', training: 'Strength (trap bar + sled)', duration: '75min', distance: '—', readiness: '6/10' },
+  { week: '2026-W33', day: 'Sat', date: '8/15', training: 'Long Run', duration: '95min', distance: '20.0km', readiness: '7/10' },
 ];
 const body = {
-  weights: [{ date: '2026-04-20', kg: 71.5, note: 'Baseline' }, { date: '2026-06-06', kg: 70.0, note: '-1.5kg' }],
-  measurements: [{ date: '2026-04-20', 肩围: '112', 胸围: '97', 上臂松: '28', 上臂屈: '30', 前臂: '—', 腰围: '88', 臀围: '98', 大腿: '52', 小腿: '38', 体重: '71.5' }],
+  weights: [
+    { date: '2026-06-14', kg: 68.0, note: 'Block start' },
+    { date: '2026-07-15', kg: 67.2, note: '-0.8kg' },
+    { date: '2026-08-15', kg: 66.5, note: '-1.5kg total' },
+  ],
+  measurements: [
+    { date: '2026-06-14', 肩围: '108', 胸围: '92', 上臂松: '27', 上臂屈: '29', 前臂: '—', 腰围: '76', 臀围: '91', 大腿: '50', 小腿: '36', 体重: '68.0' },
+    { date: '2026-08-04', 肩围: '109', 胸围: '93', 上臂松: '28', 上臂屈: '30', 前臂: '—', 腰围: '74', 臀围: '90', 大腿: '51', 小腿: '36', 体重: '66.8' },
+  ],
 };
 
 const data = {
   generatedAt: new Date().toISOString(),
-  phase: 'Sample — Marathon build + functional strength (synthetic demo data)',
-  weeklyRunTarget: [30, 40],
-  weight: { current: 70.0, asOf: '2026-06-06', target: '68-70kg' },
+  phase: 'Sample — Hyrox + Marathon dual-block build (synthetic demo data, no real athlete)',
+  weeklyRunTarget: [55, 70],
+  weight: { current: 66.5, asOf: '2026-08-15', target: '65-67kg' },
   injuries: [
-    { name: 'Left calf (soleus)', status: 'resolved', note: 'Cleared. Monitor on speed work.' },
-    { name: 'Lower back', status: 'treating', note: 'Daily core work. Weak core → pelvic tilt.' },
-    { name: 'Knee crepitus', status: 'watching', note: 'Benign. TKE daily, no pain.' },
+    { name: 'Right Achilles tendinopathy', status: 'resolved', note: 'Cleared after 8-week eccentric loading block. Monitor under speed work.' },
+    { name: 'Hip flexor tightness (L)', status: 'treating', note: 'Post-Hyrox sled/lunge soreness. Daily couch stretch + hip CARs.' },
+    { name: 'Plantar fasciitis (L), mild', status: 'watching', note: 'AM stiffness only, pain-free running. Calf raises + frozen-bottle roll.' },
   ],
   goals: {
-    firstPriority: ['Fix posture', 'Glute-driven mechanics', 'Build core + glute + shoulder base', 'Knee protection'],
-    performance: [{ year: '2026', goal: 'Marathon sub-3:45' }, { year: '2027', goal: 'Half 1:38 · Marathon 3:35' }],
+    firstPriority: ['Marathon-specific aerobic base', 'Hyrox station-transfer strength', 'Injury-free at 55-70km/week', 'Race-day pacing discipline'],
+    performance: [{ year: '2026', goal: 'Hyrox Paris (Dec 20) — sub-1:10 Open' }, { year: '2027', goal: 'London Marathon — sub-2:55 (current PB 2:58:32)' }],
   },
   pbs: [
-    { dist: '5K', time: '20:47', pace: '4:09/km', date: '2025-05-06', note: '' },
-    { dist: '10K', time: '44:56', pace: '4:30/km', date: '2025-04-29', note: '' },
-    { dist: 'Half', time: '1:39:15', pace: '4:42/km', date: '2026-04-12', note: '' },
-    { dist: 'Marathon', time: '3:45:23', pace: '5:21/km', date: '2025-10-26', note: '' },
+    { dist: '5K', time: '16:58', pace: '3:24/km', date: '2025-10-12', note: '' },
+    { dist: '10K', time: '35:12', pace: '3:31/km', date: '2025-11-09', note: '' },
+    { dist: 'Half', time: '1:18:40', pace: '3:44/km', date: '2026-02-01', note: '' },
+    { dist: 'Marathon', time: '2:58:32', pace: '4:14/km', date: '2026-03-15', note: 'Sub-3 debut' },
   ],
   physio: {
-    lthr: 173, maxHr: '184-186',
+    lthr: 175, maxHr: '190-192',
     hrZones: [
-      { zone: 'Z1', bpm: '112-138', use: 'Recovery' }, { zone: 'Z2', bpm: '138-154', use: 'Easy / Long Run' },
-      { zone: 'Z3', bpm: '154-164', use: 'Marathon pace' }, { zone: 'Z4', bpm: '164-177', use: 'Threshold' },
-      { zone: 'Z5', bpm: '>177', use: 'VO2max / race' },
+      { zone: 'Z1', bpm: '125-142', use: 'Recovery' }, { zone: 'Z2', bpm: '142-158', use: 'Easy / Long Run' },
+      { zone: 'Z3', bpm: '158-168', use: 'Marathon pace' }, { zone: 'Z4', bpm: '168-182', use: 'Threshold' },
+      { zone: 'Z5', bpm: '>182', use: 'VO2max / race' },
     ],
-    ltPace: '4:50-5:00/km', easyPace: '5:50-6:15/km @ HR 145-150',
-    baselines: { sleep: '72-87 (avg 77)', rhr: '55-59 bpm', hrv: '38-47ms (avg 41)' },
-    nutrition: { protein: '~1.8 g/kg', calories: '~2000-2200 kcal/day', deficit: '~1kg/month', notes: 'Creatine, fish oil' },
+    ltPace: '3:58-4:05/km', easyPace: '4:45-5:10/km @ HR 148-155',
+    baselines: { sleep: '78-93 (avg 86)', rhr: '42-48 bpm', hrv: '58-78ms (avg 68)' },
+    nutrition: { protein: '~2.0 g/kg', calories: '~3100-3400 kcal/day (high-volume weeks)', deficit: 'Maintenance — Hyrox strength phase, no cut', notes: 'Beetroot juice pre-race, creatine 5g/day, iron + vitamin D' },
   },
   races: {
     upcoming: [
-      { name: 'Trail Race', date: '2026-06-27', detail: '24km · 980m gain', tag: 'A race', accent: 'trail', anchor: 'trail' },
-      { name: 'Hyrox', date: '2026-08-13', detail: 'Singles · block after trail', tag: 'Prep', accent: 'hyrox', anchor: 'hyrox' },
+      { name: 'Autumn Hills Half', date: '2026-09-27', detail: '21km · 650m gain · Hyrox lead-in strength block', tag: 'Tune-up', accent: 'trail', anchor: 'trail' },
+      { name: 'Hyrox Paris', date: '2026-12-20', detail: 'Open division · 8km run + 8 stations', tag: 'A race', accent: 'hyrox', anchor: 'hyrox' },
+      { name: 'London Marathon', date: '2027-04-25', detail: 'World Marathon Major · Target sub-2:55', tag: 'Season goal', accent: 'marathon', anchor: 'races' },
     ],
   },
   trail: {
-    race: { name: 'Trail Race', date: '2026-06-27', distance: 24.28, elevation: 982 },
-    longest: { date: '2026-06-07', distance: 15.45, elevation: 1152, note: 'Climb exceeds race +17%' },
+    race: { name: 'Autumn Hills Half', date: '2026-09-27', distance: 21.1, elevation: 650 },
+    longest: { date: '2026-08-02', distance: 18.4, elevation: 540, note: 'Longest hill session to date' },
     progression: [
-      { label: '5/24', distance: 15.31, elevation: 680, status: 'done' }, { label: '6/7', distance: 15.45, elevation: 1152, status: 'done' },
-      { label: '6/14', distance: 15, elevation: 500, status: 'plan' }, { label: '6/21', distance: 10, elevation: 200, status: 'plan' },
-      { label: 'Race', distance: 24.28, elevation: 982, status: 'race' },
+      { label: '7/12', distance: 14.2, elevation: 320, status: 'done' }, { label: '7/26', distance: 16.5, elevation: 460, status: 'done' },
+      { label: '8/2', distance: 18.4, elevation: 540, status: 'done' }, { label: '9/6', distance: 19, elevation: 600, status: 'plan' },
+      { label: 'Race', distance: 21.1, elevation: 650, status: 'race' },
     ],
     plan: [
-      { week: 'W21', date: '5/24', target: '15.31km / 680m', status: 'done', note: 'First trail long run' },
-      { week: 'W23', date: '6/7', target: '15.45km / 1152m', status: 'done', note: 'OVERLOAD' },
-      { week: 'W24', date: '6/14', target: '15km / 500m', status: 'next', note: 'Downhill focus' },
-      { week: 'Race', date: '6/27', target: '24.28km / 982m', status: 'race', note: 'Effort-based' },
+      { week: 'W29', date: '7/12', target: '14.2km / 320m', status: 'done', note: 'First hill long run of the block' },
+      { week: 'W31', date: '7/26', target: '16.5km / 460m', status: 'done', note: 'Uphill effort-based, downhill form drill' },
+      { week: 'W32', date: '8/2', target: '18.4km / 540m', status: 'done', note: 'Longest to date, clean legs next day' },
+      { week: 'W36', date: '9/6', target: '19km / 600m', status: 'next', note: 'Race-pace uphill surges' },
+      { week: 'Race', date: '9/27', target: '21.1km / 650m', status: 'race', note: 'Effort-based, not chasing time' },
     ],
     gaps: [
-      { name: 'Downhill technique', sev: 'high', note: 'Confident uphill, slow downhill' },
-      { name: 'Quad eccentric strength', sev: 'high', note: 'Eccentric step-downs mandatory' },
-      { name: 'Distance endurance', sev: 'mid', note: '24km vs longest 15.45km' },
+      { name: 'Downhill braking economy', sev: 'mid', note: 'Quad eccentric load still fatigues faster than uphill' },
+      { name: 'Technical footing at pace', sev: 'mid', note: 'Loses cadence on loose gravel sections' },
     ],
-    downhill: ['Short quick steps', 'Lower CoG, soft knees', 'Quad + glute braking', 'Zig-zag steep descents'],
-    ankle: [{ date: '5/17', right: 7.5, left: 3.5 }, { date: '5/27', right: 20, left: 12.5 }],
-    ankleTarget: 20,
-    verdict: 'Climbing validated. Remaining gap = downhill technique + distance endurance.',
+    downhill: ['Short quick steps', 'Lower CoG, soft knees', 'Quad + glute braking', "Let gravity do the work, don't overstride"],
+    ankle: [{ date: '7/19', right: 24, left: 21 }, { date: '8/9', right: 29, left: 27 }],
+    ankleTarget: 30,
+    verdict: 'Hill strength on track. Main gap left is downhill braking economy before the Sept race.',
   },
   hyrox: {
-    status: 'Prep', race: { name: 'Hyrox Singles', date: '2026-08-13', location: 'Example City' },
-    statusNote: 'Focused block begins after the trail race (~7 weeks).',
-    estimate: { likely: '1:22 – 1:32', optimistic: '~1:17:40', conservative: '~1:38:00' },
-    profile: 'Running top 15% · stations bottom 40%',
+    status: 'Prep', race: { name: 'Hyrox Paris', date: '2026-12-20', location: 'Paris, France' },
+    statusNote: 'Focused 12-week Hyrox-specific block begins after the Autumn Hills Half (Sept 27).',
+    estimate: { likely: '1:08:00 – 1:12:00', optimistic: '~1:05:30', conservative: '~1:16:00' },
+    profile: 'Running top 8% · stations top 40%',
     radar: [
-      { station: 'Run 8×1km', score: 90 }, { station: 'Rowing', score: 78 }, { station: 'SkiErg', score: 65 },
-      { station: 'Farmers Carry', score: 60 }, { station: 'Lunges', score: 55 }, { station: 'Sled Push', score: 35 },
-      { station: 'Burpee', score: 35 }, { station: 'Sled Pull', score: 30 }, { station: 'Wall Balls', score: 28 },
+      { station: 'Run 8×1km', score: 95 }, { station: 'Rowing', score: 85 }, { station: 'SkiErg', score: 72 },
+      { station: 'Farmers Carry', score: 68 }, { station: 'Lunges', score: 60 }, { station: 'Sled Push', score: 45 },
+      { station: 'Burpee Broad Jump', score: 40 }, { station: 'Sled Pull', score: 38 }, { station: 'Wall Balls', score: 35 },
     ],
     bottlenecks: [
-      { rank: 1, name: 'Lactate clearance between stations', note: 'Cardio debt drags next strength station' },
-      { rank: 2, name: 'Burpee broad jump get-up', note: 'Needs hip-hinge explosiveness' },
-      { rank: 3, name: 'Wall ball endurance', note: 'First to collapse under lactate' },
+      { rank: 1, name: 'Sled push/pull power', note: 'Lower-body max-strength ceiling caps sled speed' },
+      { rank: 2, name: 'Wall ball endurance', note: 'Shoulder/quad fatigue resistance under high HR' },
+      { rank: 3, name: 'Burpee broad jump transitions', note: 'Technical efficiency + hip power' },
     ],
-    roi: 'Race-weight sled push/pull 3-4 sessions can cut 5-8min',
+    roi: 'Heavy sled + wall-ball EMOM 2x/week can cut 6-9min off the finish estimate',
     baselines: [
-      { station: 'Rowing', date: '4/26', detail: '8min all-out 2:03/500m' },
-      { station: 'SkiErg', date: '5/16', detail: 'Interval ~2:15/500m' },
+      { station: 'Rowing', date: '7/10', detail: '1000m time trial 3:28 (1:44/500m)' },
+      { station: 'SkiErg', date: '7/24', detail: '1000m time trial 3:52 (1:56/500m)' },
     ],
   },
   kpi: {
-    acwr: { value: 0.9, date: recovery.at(-1).date }, vo2max: { value: 52, date: recovery.at(-1).date },
+    acwr: { value: recovery.at(-1).acwr, date: recovery.at(-1).date }, vo2max: { value: recovery.at(-1).vo2, date: recovery.at(-1).date },
     balStreak: { value: recovery.at(-1).balStreak, date: recovery.at(-1).date },
-    currentWeekKm: 33.0, currentWeekLabel: '2026-W24',
+    currentWeekKm: 62, currentWeekLabel: '2026-W33',
   },
   recovery, strength, weeklyRun, recentActivities, body,
 };
 
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(join(OUT_DIR, 'data.sample.json'), JSON.stringify(data, null, 1));
-console.log('✓ data.sample.json written (synthetic demo data)');
