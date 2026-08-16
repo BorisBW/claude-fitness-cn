@@ -1,510 +1,696 @@
 {
- "generatedAt": "2026-06-12T14:16:10.190Z",
- "phase": "Sample — Marathon build + functional strength (synthetic demo data)",
+ "generatedAt": "2026-08-16T15:49:56.803Z",
+ "phase": "Sample — Hyrox + Marathon dual-block build (synthetic demo data, no real athlete)",
  "weeklyRunTarget": [
-  30,
-  40
+  55,
+  70
  ],
  "weight": {
-  "current": 70,
-  "asOf": "2026-06-06",
-  "target": "68-70kg"
+  "current": 66.5,
+  "asOf": "2026-08-15",
+  "target": "65-67kg"
  },
  "injuries": [
   {
-   "name": "Left calf (soleus)",
+   "name": "Right Achilles tendinopathy",
    "status": "resolved",
-   "note": "Cleared. Monitor on speed work."
+   "note": "Cleared after 8-week eccentric loading block. Monitor under speed work."
   },
   {
-   "name": "Lower back",
+   "name": "Hip flexor tightness (L)",
    "status": "treating",
-   "note": "Daily core work. Weak core → pelvic tilt."
+   "note": "Post-Hyrox sled/lunge soreness. Daily couch stretch + hip CARs."
   },
   {
-   "name": "Knee crepitus",
+   "name": "Plantar fasciitis (L), mild",
    "status": "watching",
-   "note": "Benign. TKE daily, no pain."
+   "note": "AM stiffness only, pain-free running. Calf raises + frozen-bottle roll."
   }
  ],
  "goals": {
   "firstPriority": [
-   "Fix posture",
-   "Glute-driven mechanics",
-   "Build core + glute + shoulder base",
-   "Knee protection"
+   "Marathon-specific aerobic base",
+   "Hyrox station-transfer strength",
+   "Injury-free at 55-70km/week",
+   "Race-day pacing discipline"
   ],
   "performance": [
    {
     "year": "2026",
-    "goal": "Marathon sub-3:45"
+    "goal": "Hyrox Paris (Dec 20) — sub-1:10 Open"
    },
    {
     "year": "2027",
-    "goal": "Half 1:38 · Marathon 3:35"
+    "goal": "London Marathon — sub-2:55 (current PB 2:58:32)"
    }
   ]
  },
  "pbs": [
   {
    "dist": "5K",
-   "time": "20:47",
-   "pace": "4:09/km",
-   "date": "2025-05-06",
+   "time": "16:58",
+   "pace": "3:24/km",
+   "date": "2025-10-12",
    "note": ""
   },
   {
    "dist": "10K",
-   "time": "44:56",
-   "pace": "4:30/km",
-   "date": "2025-04-29",
+   "time": "35:12",
+   "pace": "3:31/km",
+   "date": "2025-11-09",
    "note": ""
   },
   {
    "dist": "Half",
-   "time": "1:39:15",
-   "pace": "4:42/km",
-   "date": "2026-04-12",
+   "time": "1:18:40",
+   "pace": "3:44/km",
+   "date": "2026-02-01",
    "note": ""
   },
   {
    "dist": "Marathon",
-   "time": "3:45:23",
-   "pace": "5:21/km",
-   "date": "2025-10-26",
-   "note": ""
+   "time": "2:58:32",
+   "pace": "4:14/km",
+   "date": "2026-03-15",
+   "note": "Sub-3 debut"
   }
  ],
  "physio": {
-  "lthr": 173,
-  "maxHr": "184-186",
+  "lthr": 175,
+  "maxHr": "190-192",
   "hrZones": [
    {
     "zone": "Z1",
-    "bpm": "112-138",
+    "bpm": "125-142",
     "use": "Recovery"
    },
    {
     "zone": "Z2",
-    "bpm": "138-154",
+    "bpm": "142-158",
     "use": "Easy / Long Run"
    },
    {
     "zone": "Z3",
-    "bpm": "154-164",
+    "bpm": "158-168",
     "use": "Marathon pace"
    },
    {
     "zone": "Z4",
-    "bpm": "164-177",
+    "bpm": "168-182",
     "use": "Threshold"
    },
    {
     "zone": "Z5",
-    "bpm": ">177",
+    "bpm": ">182",
     "use": "VO2max / race"
    }
   ],
-  "ltPace": "4:50-5:00/km",
-  "easyPace": "5:50-6:15/km @ HR 145-150",
+  "ltPace": "3:58-4:05/km",
+  "easyPace": "4:45-5:10/km @ HR 148-155",
   "baselines": {
-   "sleep": "72-87 (avg 77)",
-   "rhr": "55-59 bpm",
-   "hrv": "38-47ms (avg 41)"
+   "sleep": "78-93 (avg 86)",
+   "rhr": "42-48 bpm",
+   "hrv": "58-78ms (avg 68)"
   },
   "nutrition": {
-   "protein": "~1.8 g/kg",
-   "calories": "~2000-2200 kcal/day",
-   "deficit": "~1kg/month",
-   "notes": "Creatine, fish oil"
+   "protein": "~2.0 g/kg",
+   "calories": "~3100-3400 kcal/day (high-volume weeks)",
+   "deficit": "Maintenance — Hyrox strength phase, no cut",
+   "notes": "Beetroot juice pre-race, creatine 5g/day, iron + vitamin D"
   }
  },
  "races": {
   "upcoming": [
    {
-    "name": "Trail Race",
-    "date": "2026-06-27",
-    "detail": "24km · 980m gain",
-    "tag": "A race",
+    "name": "Autumn Hills Half",
+    "date": "2026-09-27",
+    "detail": "21km · 650m gain · Hyrox lead-in strength block",
+    "tag": "Tune-up",
     "accent": "trail",
     "anchor": "trail"
    },
    {
-    "name": "Hyrox",
-    "date": "2026-08-13",
-    "detail": "Singles · block after trail",
-    "tag": "Prep",
+    "name": "Hyrox Paris",
+    "date": "2026-12-20",
+    "detail": "Open division · 8km run + 8 stations",
+    "tag": "A race",
     "accent": "hyrox",
     "anchor": "hyrox"
+   },
+   {
+    "name": "London Marathon",
+    "date": "2027-04-25",
+    "detail": "World Marathon Major · Target sub-2:55",
+    "tag": "Season goal",
+    "accent": "marathon",
+    "anchor": "races"
    }
   ]
  },
  "trail": {
   "race": {
-   "name": "Trail Race",
-   "date": "2026-06-27",
-   "distance": 24.28,
-   "elevation": 982
+   "name": "Autumn Hills Half",
+   "date": "2026-09-27",
+   "distance": 21.1,
+   "elevation": 650
   },
   "longest": {
-   "date": "2026-06-07",
-   "distance": 15.45,
-   "elevation": 1152,
-   "note": "Climb exceeds race +17%"
+   "date": "2026-08-02",
+   "distance": 18.4,
+   "elevation": 540,
+   "note": "Longest hill session to date"
   },
   "progression": [
    {
-    "label": "5/24",
-    "distance": 15.31,
-    "elevation": 680,
+    "label": "7/12",
+    "distance": 14.2,
+    "elevation": 320,
     "status": "done"
    },
    {
-    "label": "6/7",
-    "distance": 15.45,
-    "elevation": 1152,
+    "label": "7/26",
+    "distance": 16.5,
+    "elevation": 460,
     "status": "done"
    },
    {
-    "label": "6/14",
-    "distance": 15,
-    "elevation": 500,
-    "status": "plan"
+    "label": "8/2",
+    "distance": 18.4,
+    "elevation": 540,
+    "status": "done"
    },
    {
-    "label": "6/21",
-    "distance": 10,
-    "elevation": 200,
+    "label": "9/6",
+    "distance": 19,
+    "elevation": 600,
     "status": "plan"
    },
    {
     "label": "Race",
-    "distance": 24.28,
-    "elevation": 982,
+    "distance": 21.1,
+    "elevation": 650,
     "status": "race"
    }
   ],
   "plan": [
    {
-    "week": "W21",
-    "date": "5/24",
-    "target": "15.31km / 680m",
+    "week": "W29",
+    "date": "7/12",
+    "target": "14.2km / 320m",
     "status": "done",
-    "note": "First trail long run"
+    "note": "First hill long run of the block"
    },
    {
-    "week": "W23",
-    "date": "6/7",
-    "target": "15.45km / 1152m",
+    "week": "W31",
+    "date": "7/26",
+    "target": "16.5km / 460m",
     "status": "done",
-    "note": "OVERLOAD"
+    "note": "Uphill effort-based, downhill form drill"
    },
    {
-    "week": "W24",
-    "date": "6/14",
-    "target": "15km / 500m",
+    "week": "W32",
+    "date": "8/2",
+    "target": "18.4km / 540m",
+    "status": "done",
+    "note": "Longest to date, clean legs next day"
+   },
+   {
+    "week": "W36",
+    "date": "9/6",
+    "target": "19km / 600m",
     "status": "next",
-    "note": "Downhill focus"
+    "note": "Race-pace uphill surges"
    },
    {
     "week": "Race",
-    "date": "6/27",
-    "target": "24.28km / 982m",
+    "date": "9/27",
+    "target": "21.1km / 650m",
     "status": "race",
-    "note": "Effort-based"
+    "note": "Effort-based, not chasing time"
    }
   ],
   "gaps": [
    {
-    "name": "Downhill technique",
-    "sev": "high",
-    "note": "Confident uphill, slow downhill"
-   },
-   {
-    "name": "Quad eccentric strength",
-    "sev": "high",
-    "note": "Eccentric step-downs mandatory"
-   },
-   {
-    "name": "Distance endurance",
+    "name": "Downhill braking economy",
     "sev": "mid",
-    "note": "24km vs longest 15.45km"
+    "note": "Quad eccentric load still fatigues faster than uphill"
+   },
+   {
+    "name": "Technical footing at pace",
+    "sev": "mid",
+    "note": "Loses cadence on loose gravel sections"
    }
   ],
   "downhill": [
    "Short quick steps",
    "Lower CoG, soft knees",
    "Quad + glute braking",
-   "Zig-zag steep descents"
+   "Let gravity do the work, don't overstride"
   ],
   "ankle": [
    {
-    "date": "5/17",
-    "right": 7.5,
-    "left": 3.5
+    "date": "7/19",
+    "right": 24,
+    "left": 21
    },
    {
-    "date": "5/27",
-    "right": 20,
-    "left": 12.5
+    "date": "8/9",
+    "right": 29,
+    "left": 27
    }
   ],
-  "ankleTarget": 20,
-  "verdict": "Climbing validated. Remaining gap = downhill technique + distance endurance."
+  "ankleTarget": 30,
+  "verdict": "Hill strength on track. Main gap left is downhill braking economy before the Sept race."
  },
  "hyrox": {
   "status": "Prep",
   "race": {
-   "name": "Hyrox Singles",
-   "date": "2026-08-13",
-   "location": "Example City"
+   "name": "Hyrox Paris",
+   "date": "2026-12-20",
+   "location": "Paris, France"
   },
-  "statusNote": "Focused block begins after the trail race (~7 weeks).",
+  "statusNote": "Focused 12-week Hyrox-specific block begins after the Autumn Hills Half (Sept 27).",
   "estimate": {
-   "likely": "1:22 – 1:32",
-   "optimistic": "~1:17:40",
-   "conservative": "~1:38:00"
+   "likely": "1:08:00 – 1:12:00",
+   "optimistic": "~1:05:30",
+   "conservative": "~1:16:00"
   },
-  "profile": "Running top 15% · stations bottom 40%",
+  "profile": "Running top 8% · stations top 40%",
   "radar": [
    {
     "station": "Run 8×1km",
-    "score": 90
+    "score": 95
    },
    {
     "station": "Rowing",
-    "score": 78
+    "score": 85
    },
    {
     "station": "SkiErg",
-    "score": 65
+    "score": 72
    },
    {
     "station": "Farmers Carry",
-    "score": 60
+    "score": 68
    },
    {
     "station": "Lunges",
-    "score": 55
+    "score": 60
    },
    {
     "station": "Sled Push",
-    "score": 35
+    "score": 45
    },
    {
-    "station": "Burpee",
-    "score": 35
+    "station": "Burpee Broad Jump",
+    "score": 40
    },
    {
     "station": "Sled Pull",
-    "score": 30
+    "score": 38
    },
    {
     "station": "Wall Balls",
-    "score": 28
+    "score": 35
    }
   ],
   "bottlenecks": [
    {
     "rank": 1,
-    "name": "Lactate clearance between stations",
-    "note": "Cardio debt drags next strength station"
+    "name": "Sled push/pull power",
+    "note": "Lower-body max-strength ceiling caps sled speed"
    },
    {
     "rank": 2,
-    "name": "Burpee broad jump get-up",
-    "note": "Needs hip-hinge explosiveness"
+    "name": "Wall ball endurance",
+    "note": "Shoulder/quad fatigue resistance under high HR"
    },
    {
     "rank": 3,
-    "name": "Wall ball endurance",
-    "note": "First to collapse under lactate"
+    "name": "Burpee broad jump transitions",
+    "note": "Technical efficiency + hip power"
    }
   ],
-  "roi": "Race-weight sled push/pull 3-4 sessions can cut 5-8min",
+  "roi": "Heavy sled + wall-ball EMOM 2x/week can cut 6-9min off the finish estimate",
   "baselines": [
    {
     "station": "Rowing",
-    "date": "4/26",
-    "detail": "8min all-out 2:03/500m"
+    "date": "7/10",
+    "detail": "1000m time trial 3:28 (1:44/500m)"
    },
    {
     "station": "SkiErg",
-    "date": "5/16",
-    "detail": "Interval ~2:15/500m"
+    "date": "7/24",
+    "detail": "1000m time trial 3:52 (1:56/500m)"
    }
   ]
  },
  "kpi": {
   "acwr": {
-   "value": 0.9,
-   "date": "2026-06-12"
+   "value": 0.94,
+   "date": "2026-08-16"
   },
   "vo2max": {
-   "value": 52,
-   "date": "2026-06-12"
+   "value": 58.8,
+   "date": "2026-08-16"
   },
   "balStreak": {
-   "value": 23,
-   "date": "2026-06-12"
+   "value": 10,
+   "date": "2026-08-16"
   },
-  "currentWeekKm": 33,
-  "currentWeekLabel": "2026-W24"
+  "currentWeekKm": 62,
+  "currentWeekLabel": "2026-W33"
  },
  "recovery": [
   {
-   "date": "2026-05-30",
-   "sleep": 82,
-   "rhr": 56,
-   "hrv": 44,
+   "date": "2026-07-18",
+   "sleep": 87,
+   "rhr": 46,
+   "hrv": 70,
    "hrvStatus": "BALANCED",
    "readiness": 7,
-   "acwr": 0.9,
-   "vo2": 52,
-   "balStreak": 10
-  },
-  {
-   "date": "2026-05-31",
-   "sleep": 78,
-   "rhr": 57,
-   "hrv": 41,
-   "hrvStatus": "BALANCED",
-   "readiness": 7,
-   "acwr": 1,
-   "vo2": 52,
-   "balStreak": 11
-  },
-  {
-   "date": "2026-06-01",
-   "sleep": 85,
-   "rhr": 55,
-   "hrv": 47,
-   "hrvStatus": "BALANCED",
-   "readiness": 8,
-   "acwr": 1.1,
-   "vo2": 52,
-   "balStreak": 12
-  },
-  {
-   "date": "2026-06-02",
-   "sleep": 90,
-   "rhr": 54,
-   "hrv": 52,
-   "hrvStatus": "BALANCED",
-   "readiness": 9,
-   "acwr": 1.2000000000000002,
-   "vo2": 52,
-   "balStreak": 13
-  },
-  {
-   "date": "2026-06-03",
-   "sleep": 76,
-   "rhr": 58,
-   "hrv": 38,
-   "hrvStatus": "UNBALANCED",
-   "readiness": 6,
-   "acwr": 0.9,
-   "vo2": 52,
-   "balStreak": 14
-  },
-  {
-   "date": "2026-06-04",
-   "sleep": 88,
-   "rhr": 55,
-   "hrv": 50,
-   "hrvStatus": "BALANCED",
-   "readiness": 8,
-   "acwr": 1,
-   "vo2": 52,
+   "acwr": 0.96,
+   "vo2": 58,
    "balStreak": 15
   },
   {
-   "date": "2026-06-05",
-   "sleep": 80,
-   "rhr": 56,
-   "hrv": 43,
+   "date": "2026-07-19",
+   "sleep": 83,
+   "rhr": 47,
+   "hrv": 75,
    "hrvStatus": "BALANCED",
    "readiness": 7,
-   "acwr": 1.1,
-   "vo2": 52,
+   "acwr": 1.11,
+   "vo2": 58,
    "balStreak": 16
   },
   {
-   "date": "2026-06-06",
-   "sleep": 84,
-   "rhr": 55,
-   "hrv": 46,
+   "date": "2026-07-20",
+   "sleep": 81,
+   "rhr": 45,
+   "hrv": 69,
    "hrvStatus": "BALANCED",
    "readiness": 8,
-   "acwr": 1.2000000000000002,
-   "vo2": 52,
+   "acwr": 0.94,
+   "vo2": 58,
    "balStreak": 17
   },
   {
-   "date": "2026-06-07",
-   "sleep": 91,
-   "rhr": 54,
-   "hrv": 55,
+   "date": "2026-07-21",
+   "sleep": 84,
+   "rhr": 42,
+   "hrv": 69,
    "hrvStatus": "BALANCED",
-   "readiness": 9,
-   "acwr": 0.9,
-   "vo2": 52,
+   "readiness": 8,
+   "acwr": 0.96,
+   "vo2": 58,
    "balStreak": 18
   },
   {
-   "date": "2026-06-08",
-   "sleep": 79,
-   "rhr": 57,
-   "hrv": 40,
-   "hrvStatus": "UNBALANCED",
+   "date": "2026-07-22",
+   "sleep": 86,
+   "rhr": 47,
+   "hrv": 67,
+   "hrvStatus": "BALANCED",
    "readiness": 7,
-   "acwr": 1,
-   "vo2": 52,
+   "acwr": 0.93,
+   "vo2": 58,
    "balStreak": 19
   },
   {
-   "date": "2026-06-09",
-   "sleep": 86,
-   "rhr": 55,
-   "hrv": 48,
+   "date": "2026-07-23",
+   "sleep": 85,
+   "rhr": 48,
+   "hrv": 72,
    "hrvStatus": "BALANCED",
-   "readiness": 8,
-   "acwr": 1.1,
-   "vo2": 52,
+   "readiness": 7,
+   "acwr": 0.99,
+   "vo2": 58,
    "balStreak": 20
   },
   {
-   "date": "2026-06-10",
+   "date": "2026-07-24",
    "sleep": 82,
-   "rhr": 56,
-   "hrv": 45,
+   "rhr": 48,
+   "hrv": 72,
    "hrvStatus": "BALANCED",
-   "readiness": 8,
-   "acwr": 1.2000000000000002,
-   "vo2": 52,
+   "readiness": 7,
+   "acwr": 1.19,
+   "vo2": 58.2,
    "balStreak": 21
   },
   {
-   "date": "2026-06-11",
-   "sleep": 88,
-   "rhr": 55,
-   "hrv": 50,
+   "date": "2026-07-25",
+   "sleep": 80,
+   "rhr": 45,
+   "hrv": 64,
    "hrvStatus": "BALANCED",
    "readiness": 8,
-   "acwr": 0.9,
-   "vo2": 52,
+   "acwr": 0.88,
+   "vo2": 58.2,
    "balStreak": 22
   },
   {
-   "date": "2026-06-12",
-   "sleep": 83,
-   "rhr": 57,
-   "hrv": 47,
+   "date": "2026-07-26",
+   "sleep": 91,
+   "rhr": 45,
+   "hrv": 69,
+   "hrvStatus": "BALANCED",
+   "readiness": 9,
+   "acwr": 1.02,
+   "vo2": 58.2,
+   "balStreak": 23
+  },
+  {
+   "date": "2026-07-27",
+   "sleep": 87,
+   "rhr": 43,
+   "hrv": 76,
    "hrvStatus": "BALANCED",
    "readiness": 8,
-   "acwr": 1,
-   "vo2": 52,
-   "balStreak": 23
+   "acwr": 0.96,
+   "vo2": 58.2,
+   "balStreak": 24
+  },
+  {
+   "date": "2026-07-28",
+   "sleep": 80,
+   "rhr": 42,
+   "hrv": 74,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.04,
+   "vo2": 58.2,
+   "balStreak": 25
+  },
+  {
+   "date": "2026-07-29",
+   "sleep": 81,
+   "rhr": 43,
+   "hrv": 72,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.05,
+   "vo2": 58.2,
+   "balStreak": 26
+  },
+  {
+   "date": "2026-07-30",
+   "sleep": 85,
+   "rhr": 45,
+   "hrv": 68,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.15,
+   "vo2": 58.4,
+   "balStreak": 27
+  },
+  {
+   "date": "2026-07-31",
+   "sleep": 83,
+   "rhr": 45,
+   "hrv": 73,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.15,
+   "vo2": 58.4,
+   "balStreak": 28
+  },
+  {
+   "date": "2026-08-01",
+   "sleep": 82,
+   "rhr": 43,
+   "hrv": 71,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.22,
+   "vo2": 58.4,
+   "balStreak": 29
+  },
+  {
+   "date": "2026-08-02",
+   "sleep": 82,
+   "rhr": 47,
+   "hrv": 62,
+   "hrvStatus": "BALANCED",
+   "readiness": 7,
+   "acwr": 1.21,
+   "vo2": 58.4,
+   "balStreak": 30
+  },
+  {
+   "date": "2026-08-03",
+   "sleep": 84,
+   "rhr": 49,
+   "hrv": 57,
+   "hrvStatus": "UNBALANCED",
+   "readiness": 5,
+   "acwr": 1.1,
+   "vo2": 58.4,
+   "balStreak": 0
+  },
+  {
+   "date": "2026-08-04",
+   "sleep": 82,
+   "rhr": 49,
+   "hrv": 54,
+   "hrvStatus": "UNBALANCED",
+   "readiness": 5,
+   "acwr": 1.32,
+   "vo2": 58.4,
+   "balStreak": 0
+  },
+  {
+   "date": "2026-08-05",
+   "sleep": 83,
+   "rhr": 48,
+   "hrv": 48,
+   "hrvStatus": "UNBALANCED",
+   "readiness": 5,
+   "acwr": 1.09,
+   "vo2": 58.6,
+   "balStreak": 0
+  },
+  {
+   "date": "2026-08-06",
+   "sleep": 82,
+   "rhr": 50,
+   "hrv": 50,
+   "hrvStatus": "UNBALANCED",
+   "readiness": 5,
+   "acwr": 1.08,
+   "vo2": 58.6,
+   "balStreak": 0
+  },
+  {
+   "date": "2026-08-07",
+   "sleep": 91,
+   "rhr": 44,
+   "hrv": 71,
+   "hrvStatus": "BALANCED",
+   "readiness": 9,
+   "acwr": 1.03,
+   "vo2": 58.6,
+   "balStreak": 1
+  },
+  {
+   "date": "2026-08-08",
+   "sleep": 82,
+   "rhr": 43,
+   "hrv": 75,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.06,
+   "vo2": 58.6,
+   "balStreak": 2
+  },
+  {
+   "date": "2026-08-09",
+   "sleep": 91,
+   "rhr": 43,
+   "hrv": 73,
+   "hrvStatus": "BALANCED",
+   "readiness": 9,
+   "acwr": 1.02,
+   "vo2": 58.6,
+   "balStreak": 3
+  },
+  {
+   "date": "2026-08-10",
+   "sleep": 80,
+   "rhr": 43,
+   "hrv": 60,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.04,
+   "vo2": 58.6,
+   "balStreak": 4
+  },
+  {
+   "date": "2026-08-11",
+   "sleep": 85,
+   "rhr": 45,
+   "hrv": 64,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.1,
+   "vo2": 58.8,
+   "balStreak": 5
+  },
+  {
+   "date": "2026-08-12",
+   "sleep": 85,
+   "rhr": 45,
+   "hrv": 64,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 0.86,
+   "vo2": 58.8,
+   "balStreak": 6
+  },
+  {
+   "date": "2026-08-13",
+   "sleep": 80,
+   "rhr": 47,
+   "hrv": 74,
+   "hrvStatus": "BALANCED",
+   "readiness": 7,
+   "acwr": 1.2,
+   "vo2": 58.8,
+   "balStreak": 7
+  },
+  {
+   "date": "2026-08-14",
+   "sleep": 85,
+   "rhr": 46,
+   "hrv": 63,
+   "hrvStatus": "BALANCED",
+   "readiness": 7,
+   "acwr": 0.93,
+   "vo2": 58.8,
+   "balStreak": 8
+  },
+  {
+   "date": "2026-08-15",
+   "sleep": 80,
+   "rhr": 45,
+   "hrv": 63,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 1.18,
+   "vo2": 58.8,
+   "balStreak": 9
+  },
+  {
+   "date": "2026-08-16",
+   "sleep": 80,
+   "rhr": 44,
+   "hrv": 66,
+   "hrvStatus": "BALANCED",
+   "readiness": 8,
+   "acwr": 0.94,
+   "vo2": 58.8,
+   "balStreak": 10
   }
  ],
  "strength": {
@@ -512,34 +698,42 @@
    {
     "tier": "main",
     "name": "Barbell Hip Thrust",
-    "start": "25kg",
-    "current": "60kg×4×12",
-    "vl": "900→2,880 (+220%)",
-    "next": "Try 65kg×3×12"
+    "start": "40kg",
+    "current": "70kg×4×10",
+    "vl": "1,200→2,800 (+133%)",
+    "next": "Try 75kg×3×10"
    },
    {
     "tier": "main",
+    "name": "Trap Bar Deadlift",
+    "start": "60kg×3×8",
+    "current": "100kg×4×6",
+    "vl": "1,440→2,400 (+67%)",
+    "next": "Add 3rd heavy set @105kg"
+   },
+   {
+    "tier": "main",
+    "name": "Weighted Pull-up",
+    "start": "+5kg×4×6",
+    "current": "+15kg×4×8",
+    "vl": "120→480 (+300%)",
+    "next": "Hold volume, chase +17.5kg"
+   },
+   {
+    "tier": "accessory",
     "name": "DB Shoulder Press",
-    "start": "10-12kg",
-    "current": "14kg×4×10",
-    "vl": "440→560 (+27%)",
-    "next": "Hold then 16kg"
-   },
-   {
-    "tier": "main",
-    "name": "Single-arm Row",
-    "start": "12kg",
-    "current": "18kg×4×10",
-    "vl": "432→720 (+67%)",
-    "next": "Hold then 20kg"
+    "start": "10kg×3×10",
+    "current": "16kg×4×8",
+    "vl": "300→512 (+71%)",
+    "next": "Add 5th rep at 16kg"
    },
    {
     "tier": "accessory",
     "name": "Lateral Raise",
-    "start": "6kg×12",
-    "current": "6kg×4×15",
-    "vl": "216→360 (+67%)",
-    "next": "15 reps then 8kg"
+    "start": "5kg×12×3",
+    "current": "7kg×3×15",
+    "vl": "180→315 (+75%)",
+    "next": "15 reps clean then 8kg"
    }
   ],
   "vlHistory": [
@@ -548,94 +742,154 @@
     "tier": "main",
     "points": [
      {
-      "week": "W16",
-      "date": "4/16",
-      "scheme": "25×12×3",
-      "vl": 900
+      "week": "W25",
+      "date": "6/14",
+      "scheme": "40×10×3",
+      "vl": 1200
      },
      {
-      "week": "W18",
-      "date": "4/29",
-      "scheme": "40×12×4",
-      "vl": 1920
+      "week": "W27",
+      "date": "6/28",
+      "scheme": "50×10×3",
+      "vl": 1500
      },
      {
-      "week": "W19",
-      "date": "5/6",
-      "scheme": "50×12×4",
+      "week": "W29",
+      "date": "7/12",
+      "scheme": "55×10×4",
+      "vl": 2200
+     },
+     {
+      "week": "W30",
+      "date": "7/19",
+      "scheme": "60×10×4",
       "vl": 2400
      },
      {
-      "week": "W22",
-      "date": "5/27",
-      "scheme": "55×12×3",
-      "vl": 1980
+      "week": "W32",
+      "date": "8/2",
+      "scheme": "65×10×4",
+      "vl": 2600
      },
      {
-      "week": "W23",
-      "date": "6/3",
-      "scheme": "60×12×3",
+      "week": "W33",
+      "date": "8/9",
+      "scheme": "70×10×4",
+      "vl": 2800
+     }
+    ]
+   },
+   {
+    "name": "Trap Bar Deadlift",
+    "tier": "main",
+    "points": [
+     {
+      "week": "W25",
+      "date": "6/14",
+      "scheme": "60×8×3",
+      "vl": 1440
+     },
+     {
+      "week": "W27",
+      "date": "6/28",
+      "scheme": "70×8×3",
+      "vl": 1680
+     },
+     {
+      "week": "W29",
+      "date": "7/12",
+      "scheme": "80×6×4",
+      "vl": 1920
+     },
+     {
+      "week": "W30",
+      "date": "7/19",
+      "scheme": "85×6×4",
+      "vl": 2040
+     },
+     {
+      "week": "W32",
+      "date": "8/2",
+      "scheme": "90×6×4",
       "vl": 2160
      },
      {
-      "week": "W24",
-      "date": "6/10",
-      "scheme": "60×12×4",
-      "vl": 2880
+      "week": "W33",
+      "date": "8/9",
+      "scheme": "100×6×4",
+      "vl": 2400
+     }
+    ]
+   },
+   {
+    "name": "Weighted Pull-up",
+    "tier": "main",
+    "points": [
+     {
+      "week": "W25",
+      "date": "6/14",
+      "scheme": "+5kg×6×4",
+      "vl": 120
+     },
+     {
+      "week": "W27",
+      "date": "6/28",
+      "scheme": "+7.5kg×6×4",
+      "vl": 180
+     },
+     {
+      "week": "W29",
+      "date": "7/12",
+      "scheme": "+10kg×7×4",
+      "vl": 280
+     },
+     {
+      "week": "W30",
+      "date": "7/19",
+      "scheme": "+10kg×8×4",
+      "vl": 320
+     },
+     {
+      "week": "W32",
+      "date": "8/2",
+      "scheme": "+12.5kg×8×4",
+      "vl": 400
+     },
+     {
+      "week": "W33",
+      "date": "8/9",
+      "scheme": "+15kg×8×4",
+      "vl": 480
      }
     ]
    },
    {
     "name": "DB Shoulder Press",
-    "tier": "main",
+    "tier": "accessory",
     "points": [
      {
-      "week": "W16",
-      "date": "4/16",
-      "scheme": "10-12kg",
-      "vl": 440
+      "week": "W25",
+      "date": "6/14",
+      "scheme": "10×10×3",
+      "vl": 300
      },
      {
-      "week": "W19",
-      "date": "5/6",
-      "scheme": "12kg×43",
-      "vl": 516
+      "week": "W28",
+      "date": "7/5",
+      "scheme": "12×10×3",
+      "vl": 360
      },
      {
-      "week": "W22",
-      "date": "5/27",
-      "scheme": "14×10×3",
-      "vl": 564
+      "week": "W30",
+      "date": "7/19",
+      "scheme": "14×9×3",
+      "vl": 378
      },
      {
-      "week": "W24",
-      "date": "6/12",
-      "scheme": "14×4×10",
-      "vl": 560
-     }
-    ]
-   },
-   {
-    "name": "Single-arm Row",
-    "tier": "main",
-    "points": [
-     {
-      "week": "W17",
-      "date": "4/24",
-      "scheme": "12×12×3",
-      "vl": 432
-     },
-     {
-      "week": "W19",
-      "date": "5/8",
-      "scheme": "16×10×4",
-      "vl": 640
-     },
-     {
-      "week": "W24",
-      "date": "6/12",
-      "scheme": "18×10×4",
-      "vl": 720
+      "week": "W33",
+      "date": "8/9",
+      "scheme": "16×8×4",
+      "vl": 512
      }
     ]
    },
@@ -644,22 +898,28 @@
     "tier": "accessory",
     "points": [
      {
-      "week": "W19",
-      "date": "5/8",
+      "week": "W25",
+      "date": "6/14",
+      "scheme": "5×12×3",
+      "vl": 180
+     },
+     {
+      "week": "W28",
+      "date": "7/5",
       "scheme": "6×12×3",
       "vl": 216
      },
      {
-      "week": "W20",
-      "date": "5/15",
+      "week": "W31",
+      "date": "7/26",
       "scheme": "6×15×3",
       "vl": 270
      },
      {
-      "week": "W23",
-      "date": "6/6",
-      "scheme": "6×15×4",
-      "vl": 360
+      "week": "W33",
+      "date": "8/9",
+      "scheme": "7×15×3",
+      "vl": 315
      }
     ]
    }
@@ -667,114 +927,146 @@
  },
  "weeklyRun": [
   {
-   "week": "2026-W18",
-   "range": "Apr27-May03",
-   "runKm": 26
+   "week": "2026-W26",
+   "range": "Jun22-Jun28",
+   "runKm": 48
   },
   {
-   "week": "2026-W19",
-   "range": "May04-May10",
-   "runKm": 38.2
+   "week": "2026-W27",
+   "range": "Jun29-Jul05",
+   "runKm": 52
   },
   {
-   "week": "2026-W20",
-   "range": "May11-May17",
-   "runKm": 19.1
+   "week": "2026-W28",
+   "range": "Jul06-Jul12",
+   "runKm": 58
   },
   {
-   "week": "2026-W21",
-   "range": "May18-May24",
-   "runKm": 47
+   "week": "2026-W29",
+   "range": "Jul13-Jul19",
+   "runKm": 45
   },
   {
-   "week": "2026-W22",
-   "range": "May25-May31",
-   "runKm": 26
+   "week": "2026-W30",
+   "range": "Jul20-Jul26",
+   "runKm": 60
   },
   {
-   "week": "2026-W23",
-   "range": "Jun01-Jun07",
-   "runKm": 38.5
+   "week": "2026-W31",
+   "range": "Jul27-Aug02",
+   "runKm": 65
   },
   {
-   "week": "2026-W24",
-   "range": "Jun08-Jun14",
-   "runKm": 33
+   "week": "2026-W32",
+   "range": "Aug03-Aug09",
+   "runKm": 68
+  },
+  {
+   "week": "2026-W33",
+   "range": "Aug10-Aug16",
+   "runKm": 62
   }
  ],
  "recentActivities": [
   {
-   "week": "2026-W24",
+   "week": "2026-W33",
    "day": "Mon",
-   "date": "6/8",
-   "training": "Strength B+C",
-   "duration": "87min",
+   "date": "8/10",
+   "training": "Strength (Hyrox lower + hip thrust)",
+   "duration": "70min",
    "distance": "—",
-   "readiness": "5/10"
+   "readiness": "8/10"
   },
   {
-   "week": "2026-W24",
+   "week": "2026-W33",
    "day": "Tue",
-   "date": "6/9",
+   "date": "8/11",
    "training": "Easy Run",
-   "duration": "60min",
-   "distance": "10.0km",
-   "readiness": "9/10"
+   "duration": "55min",
+   "distance": "11.5km",
+   "readiness": "8/10"
   },
   {
-   "week": "2026-W24",
+   "week": "2026-W33",
    "day": "Wed",
-   "date": "6/10",
-   "training": "Strength A (legs)",
-   "duration": "75min",
+   "date": "8/12",
+   "training": "Strength (pull + carries)",
+   "duration": "65min",
    "distance": "—",
-   "readiness": "9/10"
-  },
-  {
-   "week": "2026-W24",
-   "day": "Thu",
-   "date": "6/11",
-   "training": "Easy Run",
-   "duration": "49min",
-   "distance": "8.0km",
    "readiness": "7/10"
   },
   {
-   "week": "2026-W24",
+   "week": "2026-W33",
+   "day": "Thu",
+   "date": "8/13",
+   "training": "Tempo Run",
+   "duration": "50min",
+   "distance": "12.0km",
+   "readiness": "8/10"
+  },
+  {
+   "week": "2026-W33",
    "day": "Fri",
-   "date": "6/12",
-   "training": "Strength B+C",
-   "duration": "96min",
+   "date": "8/14",
+   "training": "Strength (trap bar + sled)",
+   "duration": "75min",
    "distance": "—",
+   "readiness": "6/10"
+  },
+  {
+   "week": "2026-W33",
+   "day": "Sat",
+   "date": "8/15",
+   "training": "Long Run",
+   "duration": "95min",
+   "distance": "20.0km",
    "readiness": "7/10"
   }
  ],
  "body": {
   "weights": [
    {
-    "date": "2026-04-20",
-    "kg": 71.5,
-    "note": "Baseline"
+    "date": "2026-06-14",
+    "kg": 68,
+    "note": "Block start"
    },
    {
-    "date": "2026-06-06",
-    "kg": 70,
-    "note": "-1.5kg"
+    "date": "2026-07-15",
+    "kg": 67.2,
+    "note": "-0.8kg"
+   },
+   {
+    "date": "2026-08-15",
+    "kg": 66.5,
+    "note": "-1.5kg total"
    }
   ],
   "measurements": [
    {
-    "date": "2026-04-20",
-    "肩围": "112",
-    "胸围": "97",
+    "date": "2026-06-14",
+    "肩围": "108",
+    "胸围": "92",
+    "上臂松": "27",
+    "上臂屈": "29",
+    "前臂": "—",
+    "腰围": "76",
+    "臀围": "91",
+    "大腿": "50",
+    "小腿": "36",
+    "体重": "68.0"
+   },
+   {
+    "date": "2026-08-04",
+    "肩围": "109",
+    "胸围": "93",
     "上臂松": "28",
     "上臂屈": "30",
     "前臂": "—",
-    "腰围": "88",
-    "臀围": "98",
-    "大腿": "52",
-    "小腿": "38",
-    "体重": "71.5"
+    "腰围": "74",
+    "臀围": "90",
+    "大腿": "51",
+    "小腿": "36",
+    "体重": "66.8"
    }
   ]
  }
