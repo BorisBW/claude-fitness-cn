@@ -86,7 +86,7 @@ const body = {
 
 const data = {
   generatedAt: new Date().toISOString(),
-  phase: 'Sample — Hyrox + Marathon dual-block build (synthetic demo data, no real athlete)',
+  phase: 'Sample — UTMB + Hyrox + Marathon triple-block build (synthetic demo data, no real athlete)',
   weeklyRunTarget: [55, 70],
   weight: { current: 66.5, asOf: '2026-08-15', target: '65-67kg' },
   injuries: [
@@ -95,8 +95,12 @@ const data = {
     { name: 'Plantar fasciitis (L), mild', status: 'watching', note: 'AM stiffness only, pain-free running. Calf raises + frozen-bottle roll.' },
   ],
   goals: {
-    firstPriority: ['Marathon-specific aerobic base', 'Hyrox station-transfer strength', 'Injury-free at 55-70km/week', 'Race-day pacing discipline'],
-    performance: [{ year: '2026', goal: 'Hyrox Paris (Dec 20) — sub-1:10 Open' }, { year: '2027', goal: 'London Marathon — sub-2:55 (current PB 2:58:32)' }],
+    firstPriority: ['Vertical durability + ultra fueling (UTMB)', 'Hyrox station-transfer strength', 'Marathon-specific aerobic base (London)', 'Injury-free across a 3-race season'],
+    performance: [
+      { year: '2026', goal: 'UTMB Chiang Mai 50K (Nov 28) — first ultra finish, target sub-9:00' },
+      { year: '2026', goal: 'Hyrox Paris (Dec 20) — sub-1:10 Open' },
+      { year: '2027', goal: 'London Marathon — sub-2:55 (current PB 2:58:32)' },
+    ],
   },
   pbs: [
     { dist: '5K', time: '16:58', pace: '3:24/km', date: '2025-10-12', note: '' },
@@ -117,39 +121,43 @@ const data = {
   },
   races: {
     upcoming: [
-      { name: 'Autumn Hills Half', date: '2026-09-27', detail: '21km · 650m gain · Hyrox lead-in strength block', tag: 'Tune-up', accent: 'trail', anchor: 'trail' },
-      { name: 'Hyrox Paris', date: '2026-12-20', detail: 'Open division · 8km run + 8 stations', tag: 'A race', accent: 'hyrox', anchor: 'hyrox' },
+      { name: 'UTMB Chiang Mai 50K', date: '2026-11-28', detail: '50km · 3600m gain · First 50K', tag: 'A race', accent: 'trail', anchor: 'trail' },
+      { name: 'Hyrox Paris', date: '2026-12-20', detail: 'Open division · 8km run + 8 stations · 3wk after UTMB', tag: 'B race', accent: 'hyrox', anchor: 'hyrox' },
       { name: 'London Marathon', date: '2027-04-25', detail: 'World Marathon Major · Target sub-2:55', tag: 'Season goal', accent: 'marathon', anchor: 'races' },
     ],
   },
   trail: {
-    race: { name: 'Autumn Hills Half', date: '2026-09-27', distance: 21.1, elevation: 650 },
-    longest: { date: '2026-08-02', distance: 18.4, elevation: 540, note: 'Longest hill session to date' },
+    race: { name: 'UTMB Chiang Mai 50K', date: '2026-11-28', distance: 50, elevation: 3600 },
+    longest: { date: '2026-08-02', distance: 18.4, elevation: 540, note: 'Longest single run so far — 15% of race vert' },
     progression: [
       { label: '7/12', distance: 14.2, elevation: 320, status: 'done' }, { label: '7/26', distance: 16.5, elevation: 460, status: 'done' },
-      { label: '8/2', distance: 18.4, elevation: 540, status: 'done' }, { label: '9/6', distance: 19, elevation: 600, status: 'plan' },
-      { label: 'Race', distance: 21.1, elevation: 650, status: 'race' },
+      { label: '8/2', distance: 18.4, elevation: 540, status: 'done' }, { label: '9/6', distance: 25, elevation: 900, status: 'next' },
+      { label: '10/4', distance: 32, elevation: 1500, status: 'plan' }, { label: '11/1', distance: 38, elevation: 2200, status: 'plan' },
+      { label: 'Race', distance: 50, elevation: 3600, status: 'race' },
     ],
     plan: [
       { week: 'W29', date: '7/12', target: '14.2km / 320m', status: 'done', note: 'First hill long run of the block' },
       { week: 'W31', date: '7/26', target: '16.5km / 460m', status: 'done', note: 'Uphill effort-based, downhill form drill' },
       { week: 'W32', date: '8/2', target: '18.4km / 540m', status: 'done', note: 'Longest to date, clean legs next day' },
-      { week: 'W36', date: '9/6', target: '19km / 600m', status: 'next', note: 'Race-pace uphill surges' },
-      { week: 'Race', date: '9/27', target: '21.1km / 650m', status: 'race', note: 'Effort-based, not chasing time' },
+      { week: 'W36', date: '9/6', target: '25km / 900m', status: 'next', note: 'Vertical-focused long run, poles introduced' },
+      { week: 'W40', date: '10/4', target: '32km / 1500m', status: 'plan', note: 'Back-to-back long run weekend, day-2 tired-legs practice' },
+      { week: 'W44', date: '11/1', target: '38km / 2200m', status: 'plan', note: 'Final big vert weekend before taper, race-nutrition test' },
+      { week: 'Race', date: '11/28', target: '50km / 3600m', status: 'race', note: 'UTMB Chiang Mai — effort-based, not chasing time' },
     ],
     gaps: [
+      { name: 'Vertical gain durability', sev: 'high', note: 'Longest run elevation (540m) is 15% of race total (3600m) — needs 3-4 more big vert weekends' },
+      { name: 'Ultra fueling / pacing', sev: 'high', note: 'No run past 3h yet; race is likely an 8-11h effort' },
       { name: 'Downhill braking economy', sev: 'mid', note: 'Quad eccentric load still fatigues faster than uphill' },
-      { name: 'Technical footing at pace', sev: 'mid', note: 'Loses cadence on loose gravel sections' },
     ],
-    downhill: ['Short quick steps', 'Lower CoG, soft knees', 'Quad + glute braking', "Let gravity do the work, don't overstride"],
+    downhill: ['Short quick steps', 'Lower CoG, soft knees', 'Quad + glute braking', 'Poles on steep climbs to save legs for the back half'],
     ankle: [{ date: '7/19', right: 24, left: 21 }, { date: '8/9', right: 29, left: 27 }],
     ankleTarget: 30,
-    verdict: 'Hill strength on track. Main gap left is downhill braking economy before the Sept race.',
+    verdict: 'Vertical volume is the limiter, not distance. Need 3-4 more big elevation weekends before Nov 28 — downhill economy and multi-hour fueling are the other two gaps.',
   },
   hyrox: {
     status: 'Prep', race: { name: 'Hyrox Paris', date: '2026-12-20', location: 'Paris, France' },
-    statusNote: 'Focused 12-week Hyrox-specific block begins after the Autumn Hills Half (Sept 27).',
-    estimate: { likely: '1:08:00 – 1:12:00', optimistic: '~1:05:30', conservative: '~1:16:00' },
+    statusNote: 'Only 3 weeks between UTMB Chiang Mai (Nov 28) and Hyrox Paris (Dec 20) — this block is recovery-then-sharpen, not a fitness peak. Open division, not chasing a time.',
+    estimate: { likely: '1:08:00 – 1:12:00 (assumes normal UTMB recovery)', optimistic: '~1:05:30', conservative: '~1:16:00' },
     profile: 'Running top 8% · stations top 40%',
     radar: [
       { station: 'Run 8×1km', score: 95 }, { station: 'Rowing', score: 85 }, { station: 'SkiErg', score: 72 },
