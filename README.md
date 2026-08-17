@@ -43,7 +43,8 @@ Everything is a transparent, tweakable formula in [`fitness-coach.md`](fitness-c
 - **Readiness Score (1-10)** — base 5, adjusted by sleep, HRV, energy, RHR trend, and active injury. Drives whether today is a full, reduced, or rest day. **Degrades explicitly on devices that can't fill every slot**: a required subjective 1-5 question replaces a missing Body Battery, and the report states how many inputs produced the number.
 - **HRV via SWC** — scored against *your own* trailing 28 days (`μ ± 0.5×SD` band + 7-day rolling mean) instead of a manufacturer's lagging status label. **Source-agnostic by construction** — it survives a device switch, though the baseline has to be rebuilt over ~28 days.
 - **Race Confidence Score (0-100%)** — `Injury(40%) + Load(25%) + Fitness(25%) + Recovery(10%)`. Triggers a plan pivot if it drops too far.
-- **ACWR** — Acute:Chronic Workload Ratio read **directly from Garmin** (HR + training-effect based, not mileage-estimated). Safe band 0.8–1.3. ⚠️ No other device exposes a true ACWR — WHOOP substitutes a strain ratio, Apple Watch a volume ratio, and **both are labelled as such** rather than being read against the 0.8–1.3 band.
+- **Training Load (two-pool model)** — unified endurance + strength load tracking. Endurance pool (k=7 decay) and strength pool (k=14, recovers 2x slower). CTL tracks **endurance fitness only**; strength enters fatigue but not fitness (strength progress is tracked by VL trends and PRs, not by a load average). sRPE modifier for strength sessions when reported. Full rationale in [`notes/training-load-encoding.md`](notes/training-load-encoding.md).
+- **ACWR** — Self-computed from our own load model: 7-day acute / 28-day chronic, **both pools included**. This captures strength training that Garmin's HR-based ACWR systematically underestimates. Safe band 0.8–1.3. The dashboard labels it `含力量` when using the model-based number.
 - **Volume Load** — `weight × total working reps` per lift, tracked over weeks so progress shows even when the weight doesn't change. Main lifts are tracked separately from accessories.
 
 ## Local-first recording
@@ -209,6 +210,27 @@ logic rather than duplicating it.
   scheduled run can miss. Each export covers the last 48 hours so the next run repairs the gap.
 </details>
 
+### 2. Set up your Obsidian vault
+
+Create the file structure Coach Paddy reads and writes. Templates are in [`examples/`](examples/) — copy them and fill in your own data.
+
+```bash
+# Inside your Obsidian vault (or any folder you choose):
+mkdir -p Fitness/Logs Fitness/Archive
+
+# Copy templates as starting points:
+cp examples/coach-memory.md    "YourVault/Fitness/Coach Memory.md"
+cp examples/training-plan.md   "YourVault/Fitness/Training Plan.md"
+cp examples/athlete-bio-data.md "YourVault/Fitness/Athlete Bio Data.md"
+```
+
+Then edit these files to match your situation:
+- **Coach Memory.md** — your age, sport, injury history, equipment, goals
+- **Training Plan.md** — your current weekly structure, exercises, target paces
+- **Athlete Bio Data.md** — start with an empty daily table; the morning report fills it
+
+The skill's **Memory Files** paths (in `fitness-coach.md`) default to `~/Obsidian Base/Fitness/`. If your vault is elsewhere, update the paths in the installed skill file.
+
 ### 3. (Optional) Xunji strength logging
 
 Set your Xunji API token as an environment variable — **never hard-code it**:
@@ -234,7 +256,7 @@ It layers on top of the main skill (overriding only the data source and the Read
 so keep both installed.
 
 Then edit the **Athlete Profile** and **Memory Files** paths in your installed `SKILL.md` to match
-your sport and vault.
+your sport and vault location.
 
 > **Upgrading from an earlier version?** Older releases installed to
 > `~/.claude/commands/fitness-coach.md`. That still works, but the `skills/` layout above is the
@@ -243,13 +265,38 @@ your sport and vault.
 > The recovery file was also renamed `Recovery Log.md` → `Athlete Bio Data.md`. Rename yours to
 > match; the dashboard reads either, preferring the new name.
 
-### 5. Use it
+### 5. (Optional) Dashboard
+
+The dashboard parses your Obsidian vault into a visual summary. To run it with your own data:
+
+```bash
+cd dashboard
+
+# Point at your vault's Fitness folder:
+FITNESS_DIR="/path/to/YourVault/Fitness" node scripts/build-data.mjs
+
+# Preview locally:
+npx serve public
+```
+
+To customise the dashboard, edit the `curated` object in `build-data.mjs` — it holds your injuries, goals, PBs, race plans, diet targets, and physiology data. The parser functions above it are generic; `curated` is the part you personalise.
+
+To deploy with sample data (for demo / public sharing):
+```bash
+npm run sample          # generates synthetic data
+npx vercel deploy --prod
+```
+
+Your real `data.json` is git-ignored — the public deploy only ever shows synthetic sample data.
+
+### 6. Use it
 
 ```bash
 claude
 > /fitness-coach morning      # readiness report before training
 > /fitness-coach evening      # training recap + injury check after
 > /fitness-coach weekly       # volume + ACWR + strength progress review
+> /fitness-coach plan         # generate or update training plan
 ```
 
 ## Commands
@@ -275,6 +322,10 @@ claude-fitness-cn/
 │   ├── coach-memory.md
 │   ├── training-plan.md
 │   └── athlete-bio-data.md
+├── notes/                  # Algorithm theory docs (design rationale + references)
+│   ├── training-load-encoding.md  # Two-pool CTL/ATL/TSB model, sRPE/VL layers
+│   ├── readiness.md               # Readiness Score, HRV SWC, recovery signals
+│   └── nutrition.md               # TDEE reversal, dynamic calorie target, gap logic
 └── dashboard/              # Vercel-deployable mobile dashboard
     ├── public/index.html
     ├── scripts/build-data.mjs
@@ -338,7 +389,8 @@ app、不需要建服务器**。它用[独立的适配器 skill](apple-watch-fit
 - **准备度评分 (1-10)**：基准 5 分，按睡眠、HRV、Body Battery、RHR 趋势、伤病调整 → 决定今天全力/降量/休息。**缺槽时显式降级**：没有 Body Battery 的设备改用必答的主观 1-5 分（能量/酸痛）顶上，且报告里会标注这个分数是几项算出来的
 - **HRV 用 SWC 自算**：取自己近 28 天的 μ±0.5SD 作正常带 + 7 日滚动均值，不用厂商的滞后标签。**这套方法与数据源无关**，换表也成立（但换表要重新攒 28 天基线）
 - **比赛信心评分 (0-100%)**：伤病(40%) + 负荷(25%) + 竞技状态(25%) + 恢复(10%)，过低触发计划调整
-- **ACWR**：急性:慢性负荷比，直接读 Garmin（基于心率+训练效果，比里程估算准），安全区 0.8–1.3。⚠️ 其他设备没有真 ACWR——WHOOP 用 strain 比值、Apple Watch 用里程比值代替，**都会明确标注不是 ACWR**，不套用 0.8–1.3 这条线
+- **训练负荷（两池模型）**：统一的耐力+力量负荷追踪。耐力池（k=7 衰减）和力量池（k=14，恢复慢 2 倍）。CTL 只追踪**耐力体能**；力量进疲劳不进体能（力量进步用 VL 趋势和 PR 追踪）。力量日有 sRPE 时按强度修正。完整设计见 [`notes/training-load-encoding.md`](notes/training-load-encoding.md)
+- **ACWR**：用我们自己的负荷模型计算（7 天急性 / 28 天慢性，**两池都算**），捕捉 Garmin HR-based ACWR 系统性低估的力量训练。安全区 0.8–1.3。Dashboard 标注 `含力量`
 - **Volume Load**：每个动作 `重量 × 总工作次数`，按周追踪，重量没涨也能看到容量进步；大项与辅助分开追踪
 
 ### 本地优先的记录方式

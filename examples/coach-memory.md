@@ -61,6 +61,7 @@
 - **Race weight goal**: [X kg]
 - **Supplements**: [List]
 
+
 ## Training Load History
 
 > Updated weekly by the coach.

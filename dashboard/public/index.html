@@ -53,6 +53,22 @@
   .tier-label { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
   .chart-card .delta { font-size: 12px; color: var(--green); font-weight: 600; margin-left: 6px; }
   .chart-box { position: relative; }
+  /* ---- 宏量进度环 ---- */
+  .macro-rings { display: flex; justify-content: space-around; align-items: center; gap: 6px; height: 200px; padding-top: 6px; }
+  .ring { position: relative; width: 96px; height: 96px; }
+  .ring .pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 750; }
+  .ring .g { position: absolute; top: 88px; width: 100%; text-align: center; font-size: 11px; color: var(--muted); }
+  .ring-labels { display: flex; justify-content: space-around; color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .ring-labels span { width: 96px; text-align: center; }
+  /* ---- HTML 图例(不依赖 Chart.js 内部渲染) ---- */
+  .tv-legend { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 12px; margin: 2px 0 8px; }
+  .tv-legend .tv-box { display: inline-block; width: 11px; height: 11px; border-radius: 3px; background: rgba(240,136,62,.55); margin-right: 5px; vertical-align: -1px; }
+  .tv-legend .tv-line { display: inline-block; width: 18px; border-top: 2px solid var(--accent); margin-right: 5px; vertical-align: 3px; }
+  .tv-legend .tv-dash { border-top-style: dashed; }
+
+  /* ---- 每日明细折叠 ---- */
+  #dietMoreBtn { background: var(--card2); border: 1px solid var(--border); color: var(--muted); padding: 6px 20px; border-radius: 999px; font-size: 12px; cursor: pointer; }
+  #dietMoreBtn:hover { color: var(--text); border-color: var(--muted); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); }
   th { color: var(--muted); font-weight: 500; font-size: 12px; }
@@ -106,9 +122,7 @@
   .hero .stats .s .v { font-size: 21px; font-weight: 700; }
   .hero .stats .s .k { color: var(--muted); font-size: 12px; }
 
-  /* ---- 比赛模块 banner ---- */
-  .race-banner {
-    border-radius: 16px; padding: 22px 24px; margin-bottom: 14px;
+  /* ---- 比赛模块 banner ---- */  .race-banner { border-radius: 16px; padding: 22px 24px; margin-bottom: 14px;
     border: 1px solid var(--border); position: relative; overflow: hidden;
   }
   .race-banner.trail { background: linear-gradient(110deg, rgba(240,136,62,.16), rgba(248,81,73,.08) 70%, transparent); }
@@ -120,13 +134,12 @@
   .race-banner .rb-count .n { font-size: 40px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
   .race-banner.trail .rb-count .n { color: var(--trail1); }
   .race-banner .rb-count .l { color: var(--muted); font-size: 12px; }
+  /* 比赛三卡标准化: 三列等高, 不因内容长短/换行而大小不一 */
+  #raceCards > a { display: block; height: 100%; }
+  #raceCards .race-banner { height: 100%; margin-bottom: 0; box-sizing: border-box; }
   .verdict { font-size: 14px; color: var(--text); margin-top: 14px; padding: 11px 14px;
     background: rgba(255,255,255,.03); border-left: 3px solid var(--accent); border-radius: 6px; }
   .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .technique-list { list-style: none; }
-  .technique-list li { padding: 7px 0 7px 24px; position: relative; font-size: 14px; border-bottom: 1px solid var(--border); }
-  .technique-list li:last-child { border-bottom: none; }
-  .technique-list li::before { content: '▸'; position: absolute; left: 4px; color: var(--accent); }
   .estimate-big { font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--blue); }
   .profile-tag { font-size: 15px; font-weight: 600; }
   .bottleneck { display: flex; gap: 12px; align-items: flex-start; }
@@ -166,11 +179,12 @@
   <nav id="nav">
     <a href="#overview" class="active">总览</a>
     <a href="#races">比赛</a>
-    <a href="#trail">越野跑</a>
-    <a href="#hyrox">Hyrox</a>
-    <a href="#strength">力量</a>
     <a href="#running">跑步</a>
+    <a href="#trail">越野跑</a>
+    <a href="#strength">力量</a>
+    <a href="#hyrox">Hyrox</a>
     <a href="#recovery">恢复</a>
+    <a href="#diet">营养</a>
     <a href="#physio">生理</a>
     <a href="#rehab">康复</a>
   </nav>
@@ -178,11 +192,24 @@
   <section id="overview">
     <div id="hero"></div>
     <div class="grid kpis" id="kpiCards"></div>
+    <div class="grid charts2" style="margin-top:13px">
+      <div class="card chart-card">
+        <h3>整体训练负荷（Endurance Fitness / Fatigue / Form）</h3>
+        <div id="loadMeta" style="font-size:13px;color:var(--muted);margin-bottom:6px"></div>
+        <div class="chart-box" style="height:230px"><canvas id="loadChart"></canvas></div>
+        <div id="loadNote" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      </div>
+      <div class="card chart-card">
+        <h3>本周负荷构成（耐力 vs 力量）</h3>
+        <div class="chart-box" style="height:230px"><canvas id="loadDonut"></canvas></div>
+        <div id="loadComposition" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      </div>
+    </div>
   </section>
 
-  <section id="races">
+<section id="races">
     <h2>比赛</h2>
-    <div class="grid charts2" id="raceCards" style="margin-bottom:14px"></div>
+    <div class="grid charts3" id="raceCards" style="margin-bottom:14px"></div>
     <div class="grid charts2">
       <div class="card table-scroll">
         <h3 class="tier-label">🏅 个人 PB</h3>
@@ -199,10 +226,46 @@
     </div>
   </section>
 
-  <section id="trail">
+<section id="running">
+    <h2>跑步</h2>
+    <div class="grid charts2">
+      <div class="card chart-card">
+        <h3>周跑量（km）</h3>
+        <div class="chart-box" style="height:220px"><canvas id="weeklyRunChart"></canvas></div>
+        <div id="runVolNote" style="color:var(--muted);font-size:12px;margin-top:8px"></div>
+      </div>
+      <div class="card chart-card">
+        <h3>强度分布（80/20 极化训练）</h3>
+        <div class="chart-box" style="height:220px"><canvas id="intensityChart"></canvas></div>
+        <div id="intensityNote" style="color:var(--muted);font-size:12px;margin-top:8px"></div>
+      </div>
+      <div class="card chart-card">
+        <h3>关键训练配速趋势（长跑 / 节奏 / 间歇）</h3>
+        <div class="chart-box" style="height:220px"><canvas id="paceTrendChart"></canvas></div>
+        <div id="paceTrendNote" style="color:var(--muted);font-size:12px;margin-top:8px"></div>
+      </div>
+      <div class="card chart-card">
+        <h3>心率效率（速度 ÷ 心率 · Garmin）</h3>
+        <div class="chart-box" style="height:220px"><canvas id="hrEffChart"></canvas></div>
+        <div id="hrEffNote" style="color:var(--muted);font-size:12px;margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
+
+<section id="trail">
     <h2>越野跑专项</h2>
     <div class="race-banner trail" id="trailBanner"></div>
-    <div class="grid charts2">
+    <div class="grid charts2" style="margin-top:13px">
+      <div class="card chart-card">
+        <h3>每周爬升量（m · 训练周目标 = 比赛爬升 50%+）</h3>
+        <div class="chart-box" style="height:240px"><canvas id="trailVertChart"></canvas></div>
+      </div>
+      <div class="card chart-card">
+        <h3>爬升强度（m/km · 对标比赛 REC）</h3>
+        <div class="chart-box" style="height:240px"><canvas id="trailRecChart"></canvas></div>
+      </div>
+    </div>
+    <div class="grid charts2" style="margin-top:13px">
       <div class="card chart-card">
         <h3>长距离渐进（距离 km / 爬升 m）</h3>
         <div class="chart-box" style="height:240px"><canvas id="trailProgChart"></canvas></div>
@@ -212,23 +275,27 @@
         <div class="chart-box" style="height:240px"><canvas id="ankleChart"></canvas></div>
       </div>
     </div>
-    <div class="grid charts2" style="margin-top:13px">
-      <div class="card">
-        <h3 class="tier-label">⚠️ 剩余 Gap</h3>
-        <div id="trailGaps"></div>
-      </div>
-      <div class="card">
-        <h3 class="tier-label">⛰️ 下坡技术要点</h3>
-        <ul class="technique-list" id="downhillList"></ul>
-      </div>
-    </div>
     <div class="card table-scroll" style="margin-top:13px">
       <h3 class="tier-label">📅 长距离备赛计划</h3>
       <table id="trailPlanTable"></table>
     </div>
   </section>
 
-  <section id="hyrox">
+<section id="strength">
+    <h2>力量进度 · Volume Load</h2>
+    <h3 class="tier-label">⭐ 大项（主升 + 大复合）</h3>
+    <div class="grid charts3" id="vlChartsMain"></div>
+    <h3 class="tier-label" style="margin-top:18px">辅助动作</h3>
+    <div class="grid charts3" id="vlChartsAcc"></div>
+    <div class="card table-scroll" style="margin-top:12px">
+      <h3 class="tier-label">⭐ 大项</h3>
+      <table id="progressTableMain"></table>
+      <h3 class="tier-label" style="margin-top:16px">辅助</h3>
+      <table id="progressTableAcc"></table>
+    </div>
+  </section>
+
+<section id="hyrox">
     <h2>Hyrox 专项</h2>
     <div class="race-banner hyrox" id="hyroxBanner"></div>
     <div class="grid charts2">
@@ -251,35 +318,7 @@
     </div>
   </section>
 
-  <section id="strength">
-    <h2>力量进度 · Volume Load</h2>
-    <h3 class="tier-label">⭐ 大项（主升 + 大复合）</h3>
-    <div class="grid charts3" id="vlChartsMain"></div>
-    <h3 class="tier-label" style="margin-top:18px">辅助动作</h3>
-    <div class="grid charts3" id="vlChartsAcc"></div>
-    <div class="card table-scroll" style="margin-top:12px">
-      <h3 class="tier-label">⭐ 大项</h3>
-      <table id="progressTableMain"></table>
-      <h3 class="tier-label" style="margin-top:16px">辅助</h3>
-      <table id="progressTableAcc"></table>
-    </div>
-  </section>
-
-  <section id="running">
-    <h2>跑步</h2>
-    <div class="grid charts2">
-      <div class="card chart-card">
-        <h3>周跑量（km）</h3>
-        <div class="chart-box" style="height:220px"><canvas id="weeklyRunChart"></canvas></div>
-      </div>
-      <div class="card chart-card table-scroll">
-        <h3>最近训练</h3>
-        <table id="activityTable"></table>
-      </div>
-    </div>
-  </section>
-
-  <section id="recovery">
+<section id="recovery">
     <h2>恢复趋势（近35天）</h2>
     <div class="grid charts2">
       <div class="card chart-card"><h3>HRV / RHR</h3><div class="chart-box" style="height:220px"><canvas id="hrvChart"></canvas></div></div>
@@ -287,7 +326,45 @@
     </div>
   </section>
 
-  <section id="physio">
+<section id="diet">
+    <h2>营养</h2>
+    <div class="grid kpis" id="dietKpis"></div>
+    <div class="grid charts2" style="margin-top:13px">
+      <div class="card">
+        <h3 id="weekBalTitle">能量平衡 <span class="delta" id="weekBalDate"></span></h3>
+        <div id="weekBal"></div>
+      </div>
+      <div class="card chart-card">
+        <h3 id="macroTitle">宏量完成度（vs 日目标×天数）</h3>
+        <div class="macro-rings">
+          <div class="ring"><canvas id="macroP"></canvas><div class="g">蛋白</div></div>
+          <div class="ring"><canvas id="macroC"></canvas><div class="g">碳水</div></div>
+          <div class="ring"><canvas id="macroF"></canvas><div class="g">脂肪</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card chart-card" style="margin-top:13px">
+      <h3>近14天摄入 × 训练日（柱=热量 · 虚线=动态目标 · 线=碳水/蛋白）<span class="delta" id="tvVerdict"></span></h3>
+      <div class="tv-legend">
+        <span><i class="tv-box"></i>热量 kcal</span>
+        <span><i class="tv-line tv-dash"></i>动态目标</span>
+        <span><i class="tv-line" style="border-color:#58a6ff"></i>碳水 g</span>
+        <span><i class="tv-line" style="border-color:#3fb950"></i>蛋白 g</span>
+      </div>
+      <div style="color:var(--muted);font-size:11px;margin:0 0 8px">柱下标注训练日：休=休息 · 跑=跑步 · 力=力量 · 长=长跑 · 聚=聚餐</div>
+      <div class="chart-box" style="height:250px"><canvas id="tvChart"></canvas></div>
+    </div>
+    <div class="card chart-card" style="margin-top:13px">
+      <h3>摄入 vs 体重</h3>
+      <div class="chart-box" style="height:220px"><canvas id="kcalWeightChart"></canvas></div>
+    </div>
+    <div class="card table-scroll" style="margin-top:13px">
+      <h3 class="tier-label">每日明细（kcal · 蛋白质P/碳水C/脂肪F）</h3>
+      <div id="dietTable"></div>
+    </div>
+  </section>
+
+<section id="physio">
     <h2>生理数据</h2>
     <div class="grid charts2">
       <div class="card chart-card"><h3>心率区间（LTHR <span id="lthr"></span> bpm）</h3><table id="zoneTable"></table></div>
@@ -301,10 +378,12 @@
     </div>
   </section>
 
-  <section id="rehab">
+<section id="rehab">
     <h2>康复 / 伤病</h2>
     <div class="grid injury-grid" id="injuryCards"></div>
   </section>
+
+
 
   <footer id="footer"></footer>
 </div>
@@ -342,9 +421,9 @@ async function init() {
   const res = await fetch('data.json').catch(() => null);
   const d = res && res.ok ? await res.json() : await (await fetch('data.sample.json')).json();
   document.getElementById('phase').textContent = d.phase;
-  renderHero(d); renderKpis(d); renderRaces(d);
+  renderHero(d); renderKpis(d); renderLoad(d); renderRaces(d);
   renderTrail(d); renderHyrox(d);
-  renderVl(d); renderProgress(d); renderRunning(d); renderRecovery(d); renderPhysio(d); renderRehab(d);
+  renderVl(d); renderProgress(d); renderRunning(d); renderRecovery(d); renderDiet(d); renderPhysio(d); renderRehab(d);
   document.getElementById('footer').textContent =
     '数据更新于 ' + new Date(d.generatedAt).toLocaleString('zh-CN') + ' · 来源：Obsidian Coach Paddy 训练档案';
   setupNav();
@@ -373,12 +452,60 @@ function kpiCard(label, value, sub, color) {
     <div class="value" style="${color ? 'color:' + color : ''}">${value}</div>
     <div class="sub">${sub ?? ''}</div></div>`;
 }
+function renderLoad(d) {
+  const L = d.load;
+  if (!L || !L.days || !L.days.length) {
+    document.getElementById('loadChart').closest('.grid')?.style && (document.getElementById('loadChart').closest('.grid').style.display = 'none');
+    return;
+  }
+  const days = L.days;
+  const labels = days.map(x => x.date.slice(5));
+  const last = days.at(-1);
+  const atl = last.atlRun + last.atlStr;
+  const tcol = last.tsb <= -30 ? C.red : last.tsb <= -10 ? C.yellow : last.tsb >= 25 ? C.yellow : C.green;
+  const state = last.tsb <= -30 ? '深度疲劳 — 注意恢复' : last.tsb <= -10 ? '疲劳积累中' : last.tsb >= 25 ? '减量过多' : '状态良好';
+  document.getElementById('loadMeta').innerHTML =
+    `<b style="color:${C.blue}">Endurance Fitness ${last.ctl}</b> · 耐力疲劳 ${last.atlRun} · 力量疲劳 ${last.atlStr} · ` +
+    `<b style="color:${tcol}">Endurance Form ${last.tsb}</b> <span style="margin-left:6px">${state}</span>`;
+  new Chart(document.getElementById('loadChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Endurance Fitness (CTL 42d)', data: days.map(x => x.ctl), borderColor: C.blue, tension: .3, pointRadius: 0, fill: false },
+        { label: '疲劳-耐力 (k=7)', data: days.map(x => x.atlRun), borderColor: C.green, backgroundColor: 'rgba(63,185,80,.14)', tension: .3, pointRadius: 0, fill: '-1' },
+        { label: '疲劳-力量 (k=14)', data: days.map(x => x.atlStr), borderColor: C.yellow, backgroundColor: 'rgba(210,153,34,.16)', tension: .3, pointRadius: 0, fill: '-1' },
+        { label: 'Form (TSB)', data: days.map(x => x.tsb), borderColor: C.muted, borderDash: [6, 6], tension: .3, pointRadius: 0, fill: false, yAxisID: 'y1' },
+      ],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { boxWidth: 12 } } },
+      scales: { y: { position: 'left', title: { display: true, text: '负荷 au' } },
+        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Form' } } } },
+  });
+  const wk = days.slice(-7);
+  const run = wk.reduce((s, x) => s + x.runLoad, 0), str = wk.reduce((s, x) => s + x.strLoad, 0);
+  const tot = run + str || 1;
+  new Chart(document.getElementById('loadDonut'), {
+    type: 'doughnut',
+    data: { labels: ['耐力 跑步/越野', '力量/Hyrox'],
+      datasets: [{ data: [run, str], backgroundColor: [C.green, C.yellow], borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} 点 (${Math.round(ctx.parsed / tot * 100)}%)` } } } },
+  });
+  document.getElementById('loadComposition').textContent =
+    `本周 耐力 ${run} 点 (${Math.round(run / tot * 100)}%) · 力量 ${str} 点 (${Math.round(str / tot * 100)}%)`;
+  document.getElementById('loadNote').textContent =
+    `CTL = 耐力体能（力量不进体能,只进疲劳）· 力量有 sRPE 时按强度修正 · 耐力疲劳 k=7, 力量 k=14 · 需 ~42 天历史稳定`;
+}
+
 function renderKpis(d) {
   const k = d.kpi, [lo, hi] = d.weeklyRunTarget;
   const kmPct = Math.round((k.currentWeekKm / lo) * 100);
   const ac = k.acwr.value, acColor = ac >= 0.8 && ac <= 1.3 ? C.green : ac > 1.5 ? C.red : C.yellow;
   document.getElementById('kpiCards').innerHTML =
-    kpiCard('ACWR 负荷比', ac, ac <= 1.3 && ac >= 0.8 ? 'OPTIMAL 安全区' : '注意', acColor) +
+    kpiCard('ACWR 负荷比', ac, (ac <= 1.3 && ac >= 0.8 ? 'OPTIMAL 安全区' : '注意') + (k.acwr.source === 'model' ? ' · 含力量' : ''), acColor) +
     kpiCard('VO2max', k.vo2max.value, '跑步体能基线') +
     kpiCard('HRV 连续 BALANCED', k.balStreak.value + '<span class="unit"> 天</span>', '截至 ' + k.balStreak.date, C.green) +
     kpiCard('本周跑量', k.currentWeekKm + '<span class="unit"> km</span>', `目标 ${lo}-${hi}km（${kmPct}%）`) +
@@ -419,6 +546,42 @@ function renderTrail(d) {
     </div>
     <div class="verdict">${t.verdict}</div>`;
 
+  // 每周爬升量: 柱状 + 训练周目标参考线(50% 比赛爬升, doc-lyss 规则)
+  const vr = d.weeklyRun.filter(w => w.runKm > 0);
+  const raceVert = t.race.elevation, targetVert = Math.round(raceVert * 0.5);
+  new Chart(document.getElementById('trailVertChart'), {
+    type: 'bar',
+    data: {
+      labels: vr.map(w => w.week.replace('2026-', '')),
+      datasets: [
+        { type: 'bar', label: '爬升 (m)', data: vr.map(w => w.vert || 0),
+          backgroundColor: vr.map(w => (w.vert || 0) >= targetVert ? 'rgba(63,185,80,.6)' : 'rgba(210,153,34,.55)'), borderRadius: 4 },
+        { type: 'line', label: `周目标 ${targetVert}m (50% 比赛)`, data: vr.map(() => targetVert),
+          borderColor: C.green, borderDash: [6, 6], pointRadius: 0 },
+      ],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: ctx => ctx.datasetIndex === 0 ? ctx.parsed.y + ' m' : ctx.dataset.label } } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: 'm/周' } } } },
+  });
+  // 爬升强度(m/km) vs 比赛 REC(垂直变化率): 比赛 3600m/50km = 72 m/km, 训练逐步逼近
+  const raceRec = Math.round(raceVert / t.race.distance * 10) / 10;
+  new Chart(document.getElementById('trailRecChart'), {
+    type: 'line',
+    data: {
+      labels: vr.map(w => w.week.replace('2026-', '')),
+      datasets: [
+        { label: '周爬升强度 (m/km)', data: vr.map(w => w.vert ? Math.round(w.vert / w.runKm * 10) / 10 : 0),
+          borderColor: C.accent, backgroundColor: 'rgba(240,136,62,.12)', tension: .3, pointRadius: 4, fill: true },
+        { label: `比赛 REC ${raceRec} m/km`, data: vr.map(() => raceRec), borderColor: C.red, borderDash: [6, 6], pointRadius: 0 },
+        { label: '训练目标 (50% 比赛)', data: vr.map(() => Math.round(raceRec * 0.5 * 10) / 10), borderColor: C.muted, borderDash: [2, 4], pointRadius: 0 },
+      ],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { boxWidth: 12 } } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: 'm/km' } } } },
+  });
+
   const labels = t.progression.map(p => p.label);
   new Chart(document.getElementById('trailProgChart'), {
     data: {
@@ -453,11 +616,6 @@ function renderTrail(d) {
       scales: { y: { beginAtZero: true, title: { display: true, text: '秒' } } } },
   });
 
-  document.getElementById('trailGaps').innerHTML = t.gaps.map(g =>
-    `<div class="injury" style="padding:9px 0;border-bottom:1px solid var(--border)">
-      <div class="name">${g.name}<span class="badge ${g.sev}">${g.sev === 'high' ? '高' : '中'}</span></div>
-      <div class="note">${g.note}</div></div>`).join('');
-  document.getElementById('downhillList').innerHTML = t.downhill.map(x => `<li>${x}</li>`).join('');
   document.getElementById('trailPlanTable').innerHTML =
     '<tr><th>周</th><th>日期</th><th>目标</th><th>状态</th><th>备注</th></tr>' +
     t.plan.map(p => {
@@ -502,8 +660,23 @@ function renderHyrox(d) {
     </div>`).join('');
   document.getElementById('hyroxRoi').innerHTML = '💡 <b>最高 ROI：</b>' + h.roi;
   document.getElementById('hyroxBaseTable').innerHTML =
-    '<tr><th>站点</th><th>日期</th><th>记录</th></tr>' +
-    h.baselines.map(b => `<tr><td><b>${b.station}</b></td><td style="color:var(--muted)">${b.date}</td><td>${b.detail}</td></tr>`).join('');
+    '<tr><th>站点</th><th>日期</th><th>记录</th><th style="width:34%">进度 (当前 → 目标)</th></tr>' +
+    h.baselines.map(b => {
+      // 旧数据没有 value/target 时退回纯记录行
+      if (b.value == null) return `<tr><td><b>${b.station}</b></td><td style="color:var(--muted)">${b.date}</td><td>${b.detail}</td></tr>`;
+      const raw = b.dir === 'lower' ? b.target / b.value : b.value / b.target;
+      const pct = Math.min(100, Math.round(raw * 100));
+      const color = pct >= 90 ? C.green : pct >= 70 ? C.yellow : C.red;
+      const fmt = (v) =>
+        (b.unit === 'min/km' || b.unit === 's') ? `${Math.floor(v / 60)}:${String(Math.round(v % 60)).padStart(2, '0')}` : `${v}`;
+      const suffix = b.unit === 'min/km' ? '/km' : b.unit === 's' ? '' : ' ' + b.unit;
+      return `<tr><td><b>${b.station}</b></td><td style="color:var(--muted)">${b.date}</td><td>${b.detail}</td>` +
+        `<td><div style="display:flex;align-items:center;gap:8px">` +
+        `<div style="flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden" title="当前 ${fmt(b.value)}${suffix} · 目标 ${fmt(b.target)}${suffix}">` +
+        `<div style="height:100%;width:${pct}%;background:${color};border-radius:4px"></div></div>` +
+        `<span style="font-size:11px;color:var(--muted);white-space:nowrap">${fmt(b.value)}${suffix} → ${fmt(b.target)}${suffix} ${pct}%</span>` +
+        `</div></td></tr>`;
+    }).join('');
 }
 
 function renderVl(d) {
@@ -537,17 +710,93 @@ function renderProgress(d) {
 
 function renderRunning(d) {
   const weeks = d.weeklyRun.filter(w => w.runKm > 0), [lo, hi] = d.weeklyRunTarget;
+  // 周量增幅 <10% 规则(运动科学: 周增幅超 10% 是受伤风险信号), 超标周标红并在下方说明
+  const deltas = weeks.map((w, i) => {
+    const prev = i > 0 ? weeks[i - 1].runKm : 0;
+    return prev > 0 ? Math.round((w.runKm - prev) / prev * 100) : 0;
+  });
+  const spikeIdx = deltas.map((v, i) => (v > 10 ? i : -1)).filter(i => i >= 0);
   new Chart(document.getElementById('weeklyRunChart'), {
     type: 'bar',
     data: { labels: weeks.map(w => w.week.replace('2026-', '')), datasets: [{ data: weeks.map(w => w.runKm),
-      backgroundColor: weeks.map(w => w.runKm > hi * 1.3 ? C.yellow : C.blue), borderRadius: 4 }] },
+      backgroundColor: weeks.map((w, i) => spikeIdx.includes(i) ? C.red : (w.runKm > hi * 1.3 ? C.yellow : C.blue)), borderRadius: 4 }] },
     options: { responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' km' } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => { const v = ctx.parsed.y; const d = deltas[ctx.dataIndex]; return `${v} km${d > 0 ? `（较上周 +${d}%）` : ''}`; } } } },
       scales: { y: { beginAtZero: true } } },
   });
-  document.getElementById('activityTable').innerHTML =
-    '<tr><th>日期</th><th>训练</th><th>量</th><th>Readiness</th></tr>' +
-    [...d.recentActivities].reverse().map(a => `<tr><td style="color:var(--muted)">${a.date}</td><td>${a.training}</td><td>${a.distance && a.distance !== '—' ? a.distance : a.duration}</td><td>${a.readiness}</td></tr>`).join('');
+  const noteEl = document.getElementById('runVolNote');
+  if (noteEl) {
+    noteEl.innerHTML = spikeIdx.length
+      ? `⚠️ <span style="color:${C.red}">${spikeIdx.map(i => weeks[i].week.replace('2026-', '') + ' +' + deltas[i] + '%').join('、')}</span> 较上周增幅 &gt;10%，超量风险，注意安排减量周`
+      : '周量增幅均 &lt;10%（<span style="color:var(--text)">红柱 = 增幅超标</span>）';
+  }
+
+  // ---- 强度分布 (80/20 极化训练): 每周 轻松(Zone1-2) vs 高强度(Zone3+) 堆叠柱 ----
+  const dist = d.intensityDist ?? weeks.map(w => ({ week: w.week, easyKm: w.runKm, hardKm: 0 }));
+  const totKm = dist.reduce((s, x) => s + x.easyKm + x.hardKm, 0);
+  const hardAvg = totKm ? Math.round(dist.reduce((s, x) => s + x.hardKm, 0) / totKm * 100) : 0;
+  new Chart(document.getElementById('intensityChart'), {
+    type: 'bar',
+    data: { labels: dist.map(x => x.week.replace('2026-', '')), datasets: [
+      { label: '轻松 Zone1-2', data: dist.map(x => x.easyKm), backgroundColor: C.green, stack: 's', borderRadius: 2 },
+      { label: '高强度 Zone3+', data: dist.map(x => x.hardKm), backgroundColor: C.red, stack: 's', borderRadius: 2 } ] },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+      plugins: { legend: { labels: { color: C.muted, boxWidth: 12 } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} km` } } } },
+  });
+  const iNote = document.getElementById('intensityNote');
+  if (iNote) iNote.innerHTML = `高强度占比均值 <b style="color:var(--text)">${hardAvg}%</b>（80/20 规则：高强度 ≤20%）· ${hardAvg <= 20 ? `<span style="color:${C.green}">✅ 极化训练规范</span>` : `<span style="color:${C.yellow}">⚠️ 高强度偏多，考虑降速加量</span>`}`;
+
+  // ---- 关键训练配速趋势 (长跑/节奏/间歇): paceSec 越小越快, y 轴反转(快在上) ----
+  const typeMeta = { 'Long Run': { color: C.green, zh: '长跑' }, 'Tempo': { color: C.accent, zh: '节奏' }, 'Interval': { color: C.purple, zh: '间歇' } };
+  const fmtPace = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const sorted = [...(d.keyWorkouts ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+  new Chart(document.getElementById('paceTrendChart'), {
+    type: 'line',
+    data: { labels: sorted.map(x => x.date), datasets: Object.keys(typeMeta).map(tp => ({
+      label: typeMeta[tp].zh,
+      data: sorted.map(x => x.type === tp ? x.paceSec : null),
+      borderColor: typeMeta[tp].color, backgroundColor: typeMeta[tp].color, tension: .3, pointRadius: 4, spanGaps: false })) },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { reverse: true, ticks: { callback: v => fmtPace(v) } } },
+      plugins: { legend: { labels: { color: C.muted, boxWidth: 12 } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtPace(ctx.parsed.y)}/km${sorted[ctx.dataIndex]?.hr ? ` · HR ${sorted[ctx.dataIndex].hr}` : ''}` } } } },
+  });
+  // 同类对比(长跑对长跑、节奏对节奏), 不跨课型比较
+  const perTypeDelta = Object.keys(typeMeta).map(tp => {
+    const pts = sorted.filter(x => x.type === tp);
+    if (pts.length < 2) return '';
+    const d = Math.round((pts.at(-1).paceSec - pts[0].paceSec) / pts[0].paceSec * 1000) / 10;
+    return `${typeMeta[tp].zh} ${fmtPace(pts[0].paceSec)}→${fmtPace(pts.at(-1).paceSec)} <span style="color:${d <= 0 ? C.green : C.red}">${d > 0 ? '+' : ''}${d}%</span>`;
+  }).filter(Boolean);
+  const pNote = document.getElementById('paceTrendNote');
+  if (pNote) pNote.innerHTML = (perTypeDelta.length ? perTypeDelta.join(' · ') : '暂无关键训练数据') + ' · 配速往下 = 在变快';
+
+  // ---- 心率效率 (速度÷心率, 需 Garmin avg HR): 上升 = 同样心率跑更快 ----
+  const hre = sorted.filter(x => x.hr != null);
+  const eNote = document.getElementById('hrEffNote');
+  if (hre.length >= 2) {
+    const effOf = x => Math.round(60000 / (x.paceSec * x.hr) * 1000) / 1000;
+    const dates = [...new Set(hre.map(x => x.date))].sort((a, b) => a.localeCompare(b));
+    new Chart(document.getElementById('hrEffChart'), {
+      type: 'line',
+      data: { labels: dates, datasets: Object.keys(typeMeta).map(tp => ({
+        label: typeMeta[tp].zh,
+        data: dates.map(dt => { const x = hre.find(x => x.date === dt && x.type === tp); return x ? effOf(x) : null; }),
+        borderColor: typeMeta[tp].color, backgroundColor: typeMeta[tp].color, tension: .3, pointRadius: 4, spanGaps: false })) },
+      options: { responsive: true, maintainAspectRatio: false,
+        scales: { y: { ticks: { callback: v => v.toFixed(2) } } },
+        plugins: { legend: { labels: { color: C.muted, boxWidth: 12 } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label} 效率 ${ctx.parsed.y.toFixed(3)}` } } } },
+    });
+    // 同类对比(同课型同心率下的速度变化), 不跨课型比较
+    const effPerType = Object.keys(typeMeta).map(tp => {
+      const pts = hre.filter(x => x.type === tp);
+      if (pts.length < 2) return '';
+      const e1 = 60000 / (pts[0].paceSec * pts[0].hr), e2 = 60000 / (pts.at(-1).paceSec * pts.at(-1).hr);
+      const d = Math.round((e2 - e1) / e1 * 1000) / 10;
+      return `${typeMeta[tp].zh} ${e1.toFixed(2)}→${e2.toFixed(2)} <span style="color:${d >= 0 ? C.green : C.red}">${d > 0 ? '+' : ''}${d}%</span>`;
+    }).filter(Boolean);
+    if (eNote) eNote.innerHTML = `效率 = 速度(m/min) ÷ 心率 · ${effPerType.length ? effPerType.join(' · ') : '暂无'} · 上升 = 同样心率跑更快`;
+  } else if (eNote) eNote.innerHTML = '暂无心率数据（需 Garmin 源在日志里记录 avg HR）';
 }
 
 function renderRecovery(d) {
@@ -568,6 +817,223 @@ function renderRecovery(d) {
       scales: { y: { position: 'left', min: 50, max: 100 }, y1: { position: 'right', min: 0, max: 10, grid: { drawOnChartArea: false } } },
       plugins: { legend: { labels: { boxWidth: 12 } } } },
   });
+}
+
+function renderDiet(d) {
+  const days = d.diet?.days ?? [];
+  const target = d.dietTarget || { kcal: 2200, protein: 126, carb: 240, fat: 70 };
+  const recent = days.slice(-14);
+  const today = days.at(-1);
+  const mealIcon = { 早餐: '🍳', 上午加餐: '🍎', 午餐: '🥘', 下午加餐: '☕', 晚餐: '🍜', 夜宵: '🌙' };
+
+  // ---- 1. 今日速览卡 ----
+  const kcal = today ? today.totalKcal : 0;
+  const dayTarget = today?.targetKcal ?? target.kcal;  // 动态目标(含当日训练消耗)
+  const gap = dayTarget - kcal;
+  const gapPct = dayTarget ? Math.abs(gap) / dayTarget * 100 : 0;
+  const gapColor = gapPct <= 5 ? C.green : gapPct <= 15 ? C.yellow : C.red;
+  const prot = today ? today.totalProtein : 0;
+  const protPct = target.protein ? Math.round(prot / target.protein * 100) : 0;
+  const protColor = protPct >= 90 ? C.green : protPct >= 70 ? C.yellow : C.red;
+  // 周均值对比: 本周(近7天) vs 上周(前7天)
+  const thisWk = days.slice(-7), lastWk = days.slice(-14, -7);
+  const avg = (arr, f) => arr.length ? Math.round(arr.reduce((s, x) => s + f(x), 0) / arr.length) : 0;
+  const wkKcal = avg(thisWk, x => x.totalKcal), lwKcal = avg(lastWk, x => x.totalKcal);
+  const wkProt = avg(thisWk, x => x.totalProtein), lwProt = avg(lastWk, x => x.totalProtein);
+  const kcalDelta = lwKcal ? Math.round((wkKcal - lwKcal) / lwKcal * 100) : 0;
+  document.getElementById('dietKpis').innerHTML = days.length ?
+    kpiCard('今日摄入', `${kcal}<span class="unit"> kcal</span>`, today ? today.date : '') +
+    kpiCard('每日目标', `${target.kcal}<span class="unit"> kcal</span>`, `P${target.protein} · C${target.carb} · F${target.fat}g`) +
+    kpiCard('热量缺口', `${gap > 0 ? '+' : ''}${gap}<span class="unit"> kcal</span>`, `${today?.train ? '今日' + today.train + ' · ' : ''}目标 ${dayTarget}`, gapColor) +
+    kpiCard('蛋白质完成', `${protPct}<span class="unit">%</span>`, `${prot} / ${target.protein} g`, protColor) +
+    kpiCard('周均热量', `${wkKcal}<span class="unit"> kcal</span>`, `上周 ${lwKcal}（${kcalDelta > 0 ? '+' : ''}${kcalDelta}%）· P ${wkProt}g`, kcalDelta > 5 ? C.yellow : kcalDelta < -5 ? C.green : C.muted)
+    : kpiCard('营养记录', '暂无', '微信 ClawBot 采集,确认后自动出现在这里');
+
+  // ---- 2. 近4周能量平衡 + 蛋白达标率(运动营养学: 能量平衡看4周尺度, 蛋白看持续达标) ----
+  const wk = days.slice(-28);   // 近4周(有多少天算多少天)
+  const wkIntake = wk.reduce((s, d) => s + d.totalKcal, 0);
+  const wkTargetK = wk.reduce((s, d) => s + (d.targetKcal ?? target.kcal), 0);
+  const wkGap = wkTargetK - wkIntake;
+  const wkGapPct = wkTargetK ? Math.abs(wkGap) / wkTargetK * 100 : 0;
+  const wkGapColor = wkGapPct <= 5 ? C.green : wkGapPct <= 15 ? C.yellow : C.red;
+  const protOK = wk.filter(d => d.totalProtein >= target.protein).length;
+  const nDays = wk.length || 1;
+  // 标题按实际覆盖天数定档, 避免“近4周”却只显示 14 天
+  const periodLabel = wk.length >= 28 ? '近4周' : wk.length >= 21 ? '近3周' : wk.length >= 14 ? '近2周' : wk.length >= 7 ? '近1周' : `近${wk.length}天`;
+  document.getElementById('weekBalTitle').firstChild.textContent = periodLabel + '能量平衡 ';
+  const macroTitle = document.getElementById('macroTitle');
+  if (macroTitle) macroTitle.firstChild.textContent = periodLabel + '宏量完成度（vs 日目标×天数）';
+  document.getElementById('weekBalDate').textContent = wk.length ? `（${wk[0].date.slice(5)} ~ ${wk.at(-1).date.slice(5)} · ${wk.length}天）` : '';
+  // TDEE 反推: 按体重趋势反推真实维持热量, 与生理预估对比, 判断记录是否系统性偏低
+  const tdeeEst = d.diet?.tdeeEst, tdeeExp = d.diet?.tdeeExpected, tdeeCoverage = d.diet?.tdeeCoverage, tdeeCalDays = d.diet?.tdeeCalendarDays;
+  const tdeeDiff = (tdeeEst != null && tdeeExp) ? Math.round((tdeeEst - tdeeExp) / tdeeExp * 100) : null;
+  const tdeeNote = tdeeDiff == null ? '' :
+    tdeeDiff < -5 ? `反推值比生理预估低 ${-tdeeDiff}% —— 记录可能系统性偏低（拍照低估 / 漏记炒锅油），建议按反推值上调目标` :
+    tdeeDiff > 5 ? `反推值比生理预估高 ${tdeeDiff}% —— 记录可能偏高或在增重` :
+    '反推值与生理预估吻合，记录可信';
+  document.getElementById('weekBal').innerHTML = wk.length ? `
+    <div style="display:flex;gap:30px;flex-wrap:wrap;margin-top:8px">
+      <div><div style="color:var(--muted);font-size:12px">${wk.length}天总摄入</div><div style="font-size:32px;font-weight:800">${wkIntake}<span style="font-size:13px;color:var(--muted)"> kcal</span></div></div>
+      <div><div style="color:var(--muted);font-size:12px">${wk.length}天总目标（含训练日加成）</div><div style="font-size:32px;font-weight:800">${wkTargetK}<span style="font-size:13px;color:var(--muted)"> kcal</span></div></div>
+      <div><div style="color:var(--muted);font-size:12px">${wk.length}天能量缺口</div><div style="font-size:32px;font-weight:800;color:${wkGapColor}">${wkGap >= 0 ? '−' : '+'}${Math.abs(wkGap)}<span style="font-size:13px;color:var(--muted)"> kcal</span></div></div>
+      <div><div style="color:var(--muted);font-size:12px">蛋白达标 ≥${target.protein}g/天</div><div style="font-size:32px;font-weight:800;color:${protOK >= nDays * .8 ? C.green : protOK >= nDays * .5 ? C.yellow : C.red}">${protOK}<span style="font-size:13px;color:var(--muted)"> / ${wk.length} 天</span></div></div>
+    </div>
+    <div style="color:var(--muted);font-size:12px;margin-top:10px">日均摄入 ${Math.round(wkIntake / nDays)} · 日均目标 ${Math.round(wkTargetK / nDays)} · ${wkGap >= 0 ? '低于目标' + Math.round(wkGap / nDays) + ' kcal/天（减脂/未达）' : '超出目标' + Math.round(-wkGap / nDays) + ' kcal/天'} · 蛋白需每天持续达标（训练后 MPS 持续 24-48h），不靠单日超额</div>
+    ${tdeeEst != null ? `
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">
+      <div style="color:var(--muted);font-size:12px">真实维持热量反推（能量守恒：摄入均值 − Δ体重×7700/天数，需 ≥7 天饮食 + 2 个以上体重点）</div>
+      <div style="display:flex;gap:30px;flex-wrap:wrap;margin-top:6px">
+        <div><span style="font-size:26px;font-weight:800">${tdeeEst}</span><span style="font-size:13px;color:var(--muted)"> kcal 反推 TDEE</span></div>
+        <div><span style="font-size:26px;font-weight:800;color:${tdeeExp ? 'var(--muted)' : 'var(--text)'}">${tdeeExp ?? '—'}</span><span style="font-size:13px;color:var(--muted)"> kcal 生理预估</span></div>
+        ${tdeeDiff != null ? `<div style="color:${tdeeDiff < -5 ? C.red : tdeeDiff > 5 ? C.yellow : C.green};font-size:12px;align-self:center">${tdeeNote}</div>` : ''}
+      </div>
+      ${tdeeCoverage != null && tdeeCoverage < 80 ? `<div style="color:${C.yellow};font-size:12px;margin-top:6px">⚠ 记录覆盖率 ${tdeeCoverage}%（${days.length} 天记录 / ${tdeeCalDays} 天跨度），TDEE反推可能因缺天不准</div>` : ''}
+    </div>` : ''}
+  ` : '<div style="color:var(--muted)">暂无数据</div>';
+
+  // ---- 3. 近4周宏量完成度(总量 vs 日目标×天数) ----
+  const mkRing = (id, act, tgt, color, name) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // 圆弧填充封顶 100%, 中心文字显示真实百分比(可超 100)
+    const pctReal = tgt ? Math.round(act / tgt * 100) : 0;
+    const arc = Math.max(0, Math.min(100, pctReal));
+    new Chart(el, {
+      type: 'doughnut',
+      data: { datasets: [{ data: [arc, 100 - arc],
+        backgroundColor: [color, 'rgba(255,255,255,.06)'], borderWidth: 0, circumference: 270, rotation: 225 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '74%',
+        plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+    });
+    const wrap = el.parentElement;
+    let pctEl = wrap.querySelector('.pct');
+    if (!pctEl) { pctEl = document.createElement('div'); pctEl.className = 'pct'; wrap.appendChild(pctEl); }
+    pctEl.textContent = pctReal + '%';
+    pctEl.style.color = color;
+    const g = wrap.querySelector('.g');
+    if (g) g.innerHTML = `<b style="color:var(--text);font-weight:600">${name}</b><br>${Math.round(act)} / ${tgt} g`;
+  };
+  if (wk.length) {
+    mkRing('macroP', wk.reduce((s, d) => s + d.totalProtein, 0), target.protein * wk.length, C.green, '蛋白质');
+    mkRing('macroC', wk.reduce((s, d) => s + d.totalCarb, 0), target.carb * wk.length, C.blue, '碳水');
+    mkRing('macroF', wk.reduce((s, d) => s + d.totalFat, 0), target.fat * wk.length, C.yellow, '脂肪');
+  }
+
+  // ---- 4. 训练类型 × 摄入(周期化模式: 碳水跟训练强度走, 蛋白各天持平) ----
+  const normTrain = (t) => {
+    const s = t || '';
+    if (/长跑|LSD|Long/.test(s)) return '长跑';
+    if (/力量|Strength/.test(s)) return '力量';
+    if (/跑步|跑|Run|Easy/.test(s)) return '跑步';
+    if (/休息|Off|Rest/.test(s)) return '休息';
+    if (/聚餐/.test(s)) return '聚餐';
+    return '其他';
+  };
+  const groups = {};
+  for (const d of days.slice(-14)) {
+    const g = normTrain(d.train);
+    (groups[g] = groups[g] || []).push(d);
+  }
+  const ORDER = ['休息', '跑步', '力量', '长跑', '聚餐', '其他'];
+  const labels = ORDER.filter(g => groups[g]);
+  const tvStats = labels.map(g => {
+    const arr = groups[g];
+    const avg = (f) => arr.reduce((s, d) => s + f(d), 0) / arr.length;
+    return { label: g, n: arr.length, kcal: Math.round(avg(d => d.totalKcal)), carb: Math.round(avg(d => d.totalCarb)), prot: Math.round(avg(d => d.totalProtein)) };
+  });
+  const TV_COLOR = { 休息: C.muted, 跑步: C.green, 力量: C.blue, 长跑: C.yellow, 聚餐: C.red, 其他: C.purple };
+  // 时间序列: 近14天, 柱=热量(色=训练类型), 线=碳水/蛋白, 底下标注当日训练日
+  const shortTrain = (t) => ({ 休息: '休', 跑步: '跑', 力量: '力', 长跑: '长', 聚餐: '聚', 其他: '·' }[normTrain(t)] || '·');
+  const last14 = days.slice(-14);
+  const tvEl = document.getElementById('tvChart');
+  if (tvEl && last14.length) {
+    new Chart(tvEl, {
+      type: 'bar',
+      data: { labels: last14.map(x => `${x.date.slice(5)}\n${shortTrain(x.train)}`), datasets: [
+        { type: 'bar', label: '热量 kcal', data: last14.map(x => x.totalKcal),
+          backgroundColor: 'rgba(240,136,62,.55)', borderRadius: 3, yAxisID: 'y', order: 2 },
+        { type: 'line', label: '动态目标', data: last14.map(x => x.targetKcal ?? target.kcal),
+          borderColor: C.accent, backgroundColor: C.accent, borderDash: [6, 4], tension: .2, pointRadius: 0, yAxisID: 'y', order: 1 },
+        { type: 'line', label: '碳水 g', data: last14.map(x => x.totalCarb), borderColor: C.blue, backgroundColor: C.blue, tension: .3, pointRadius: 0, yAxisID: 'y1', order: 1 },
+        { type: 'line', label: '蛋白 g', data: last14.map(x => x.totalProtein), borderColor: C.green, backgroundColor: C.green, tension: .3, pointRadius: 0, yAxisID: 'y1', order: 1 } ] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx => {
+            const d = last14[ctx.dataIndex];
+            if (ctx.dataset.label === '碳水 g' || ctx.dataset.label === '蛋白 g') return ctx.dataset.label + ' ' + ctx.parsed.y;
+            if (ctx.dataset.label === '动态目标') return '动态目标 ' + ctx.parsed.y + ' kcal';
+            const tgt = d.targetKcal ?? target.kcal;
+            const diff = d.totalKcal - tgt;
+            return `${d.totalKcal} kcal · 目标 ${tgt}（${diff >= 0 ? '吃够+' + diff : '差' + Math.abs(diff)}）· ${d.train || '无训练'} · 蛋白 ${d.totalProtein}g${d.totalProtein >= target.protein ? ' ✓' : ' ✗'}`;
+          } } } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'kcal' } },
+          y1: { position: 'right', title: { display: true, text: 'g' }, grid: { drawOnChartArea: false } } } },
+    });
+  }
+  const carbLbl = tvStats.find(s => s.label === '长跑'), carbRest = tvStats.find(s => s.label === '休息');
+  const protMin = tvStats.length ? Math.min(...tvStats.map(s => s.prot)) : 0;
+  const protMax = tvStats.length ? Math.max(...tvStats.map(s => s.prot)) : 0;
+  let verdict = '';
+  if (tvStats.length) {
+    let carbVerdict;
+    if (!carbLbl || !carbRest) {
+      carbVerdict = '— 数据不足，无法评估碳水周期化';
+    } else {
+      const carbOK = carbLbl.carb > carbRest.carb;
+      carbVerdict = `${carbOK ? '✓' : '✗'} 碳水随训练强度${carbOK ? '' : '未'}递增（${carbRest.carb}→${carbLbl.carb}g）`;
+    }
+    const protFlat = (protMax - protMin) <= protMax * 0.25;
+    verdict = `${carbVerdict} · ${protFlat ? '✓' : '✗'} 蛋白各组${protFlat ? '持平' : '波动大'}（${protMin}-${protMax}g）`;
+  }
+  document.getElementById('tvVerdict').textContent = verdict;
+
+  // ---- 4. 摄入 vs 体重(双轴双折线, 面积填充) ----
+  const wts = d.body?.weights ?? [];
+  const weightFor = (date) => { let best = null; for (const w of wts) if (w.date <= date) best = w.kg; return best; };
+  if (recent.length) {
+    const kgVals = recent.map(x => weightFor(x.date)).filter(v => v !== null);
+    // 体重轴按实际范围缩放(不从0开始),否则波动被压平看不见
+    const kgMin = kgVals.length ? Math.floor(Math.min(...kgVals) - 0.8) : 60;
+    const kgMax = kgVals.length ? Math.ceil(Math.max(...kgVals) + 0.8) : 80;
+    new Chart(document.getElementById('kcalWeightChart'), {
+      type: 'line',
+      data: { labels: recent.map(x => x.date.slice(5)), datasets: [
+        { label: '摄入 kcal', data: recent.map(x => x.totalKcal), borderColor: C.accent, backgroundColor: 'rgba(240,136,62,.15)', fill: true, tension: .3, pointRadius: 2, yAxisID: 'y' },
+        { label: '体重 kg', data: recent.map(x => weightFor(x.date)), borderColor: C.blue, tension: .3, pointRadius: 3, yAxisID: 'y1' } ] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { boxWidth: 12 } } },
+        scales: { y: { position: 'left', title: { display: true, text: 'kcal' } },
+          y1: { position: 'right', title: { display: true, text: 'kg' }, grid: { drawOnChartArea: false }, min: kgMin, max: kgMax } } },
+    });
+  }
+
+  // ---- 6. 每日明细表(带宏量列): 默认只显示最近1天, 其余折叠可展开 ----
+  const dayBlocks = [...days].reverse().map(day =>
+    '<tr><td colspan="5" style="background:var(--card2);color:var(--text);font-weight:700">📅 ' + day.date + ' · 合计 ' + day.totalKcal + ' kcal · P ' + day.totalProtein + ' / C ' + day.totalCarb + ' / F ' + day.totalFat + ' g</td></tr>' +
+    day.meals.map(m => {
+      const items = (m.items || []).map(it => `${it.name}${it.portion || ''}${it.kcal ? ' ' + it.kcal + 'kcal' : ''}`).join('、');
+      return `<tr><td>${mealIcon[m.meal] || '🍽️'} ${m.meal} ${m.time || ''}</td><td>${items}</td>
+        <td><b>${m.kcal}</b></td><td>${m.protein ?? '—'}</td><td>${m.carb ?? '—'} / ${m.fat ?? '—'}</td></tr>`;
+    }).join('')
+  );
+  const VISIBLE_DAYS = 1;  // 明细默认只展开最近1天, 页面尽量短; 其余收起
+  const hiddenBlocks = dayBlocks.slice(VISIBLE_DAYS);
+  document.getElementById('dietTable').innerHTML = days.length
+    ? '<table><tr><th>餐次</th><th>内容</th><th>kcal</th><th>P</th><th>C / F</th></tr>' +
+      dayBlocks.slice(0, VISIBLE_DAYS).join('') +
+      (hiddenBlocks.length ? '<tbody id="dietMore" style="display:none">' + hiddenBlocks.join('') + '</tbody>' : '') +
+      '</table>' +
+      (hiddenBlocks.length ? `<div style="text-align:center;margin-top:10px"><button id="dietMoreBtn" onclick="toggleDiet()">展开全部 ${hiddenBlocks.length} 天 ▾</button></div>` : '')
+    : '<div style="color:var(--muted)">暂无营养记录 — 微信 ClawBot 采集,确认后自动出现在这里</div>';
+}
+
+function toggleDiet() {
+  const more = document.getElementById('dietMore');
+  const btn = document.getElementById('dietMoreBtn');
+  if (!more || !btn) return;
+  const isOpen = more.style.display !== 'none';
+  more.style.display = isOpen ? 'none' : '';
+  btn.textContent = isOpen ? '展开全部 ▾' : '收起 ▴';
 }
 
 function renderPhysio(d) {

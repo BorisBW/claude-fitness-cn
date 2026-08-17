@@ -1,5 +1,6 @@
 # Real data parsed from your private vault — never commit
 public/data.json
+public/data.json.*
 
 # Vercel project linkage / secrets
 .vercel
