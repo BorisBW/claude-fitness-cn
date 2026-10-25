@@ -45,9 +45,9 @@ Apple Watch → iPhone HealthKit → Shortcuts (scheduled) → iCloud Drive → 
 
 ## Data location
 
-Set this once and record it in Coach Memory:
+The export directory is `appleExportDir` in `~/.claude/fitness-coach/config.json` (set by `npm run setup` when you pick Apple Watch). If it is `null`, tell the athlete to re-run setup — don't guess a path.
 
-- **Export directory**: `/path/to/iCloud Drive/HealthExport/`
+- **Export directory**: `<config.appleExportDir>`
 - **File pattern**: `health-YYYY-MM-DD.json` (one file per export run)
 
 Read the most recent file. If today's file is missing, fall back to the newest available and
@@ -181,7 +181,7 @@ Everything here uses stock iOS apps. No paid app, no developer account, no serve
    - **Save File** — to `iCloud Drive/HealthExport/`, filename `health-<date>.json`,
      overwrite if it exists.
 4. On the desktop, make sure iCloud Drive is syncing that folder (free; iCloud for Windows works).
-5. Tell the coach the folder path so it can be recorded in Coach Memory.
+5. Enter that folder path in `npm run setup` (Apple Watch step); it is stored as `appleExportDir` in config.json.
 
 **Distribution tip**: a Shortcut can be shared as an iCloud link. Importing a link is a single tap
 — far lower friction than asking a non-technical athlete to build the automation by hand.

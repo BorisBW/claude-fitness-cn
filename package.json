@@ -1,0 +1,15 @@
+{
+  "name": "claude-fitness-cn",
+  "private": true,
+  "description": "Coach Paddy — AI fitness coach skill for Claude Code. `npm run setup` opens the graphical installer.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "setup": "node setup/server.mjs",
+    "dashboard:sample": "npm --prefix dashboard run sample",
+    "dashboard:data": "npm --prefix dashboard run data",
+    "dashboard:dev": "npm --prefix dashboard run dev"
+  }
+}

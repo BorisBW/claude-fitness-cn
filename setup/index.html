@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach Paddy Setup</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --text: #16181d; --muted: #667085; --line: #e4e7ec;
+    --accent: #1f6feb; --accent-text: #fff; --ok: #0f9d58; --warn: #d97706; --bad: #dc2626; --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1115; --card: #171a21; --text: #e6e8ee; --muted: #98a2b3; --line: #2a2f3a; --accent: #4c8dff; --code: #0b0d12; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0; }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text); padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+  .lang button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .steps { display: flex; gap: 6px; margin-bottom: 20px; }
+  .steps span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+  .steps span.done { background: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .card h2 { margin: 0 0 4px; font-size: 18px; }
+  .hint { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 6px; }
+  label small { font-weight: 400; color: var(--muted); }
+  input[type=text], input[type=number], input[type=date], input[type=password], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+  .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .choice { border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer; background: var(--bg); }
+  .choice.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+  .choice b { display: block; }
+  .choice small { color: var(--muted); }
+  .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }
+  button.primary { background: var(--accent); color: var(--accent-text); border: 0; padding: 11px 18px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost { background: none; color: var(--text); border: 1px solid var(--line); padding: 11px 18px; border-radius: 8px; font: inherit; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  .env { display: grid; gap: 6px; font-size: 14px; margin-top: 12px; }
+  .env div::before { content: "•"; margin-right: 8px; }
+  .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  pre { background: var(--code); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
+  .cmd { position: relative; }
+  .cmd pre { padding-right: 72px; }
+  .cmd button { position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 4px 8px; }
+  ul.files { font-size: 13px; color: var(--muted); padding-left: 18px; }
+  .hidden { display: none; }
+  .err { color: var(--bad); font-size: 14px; margin-top: 10px; }
+  ol.next li { margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 data-i18n="title"></h1>
+    <div class="lang"><button data-lang="zh">中文</button><button data-lang="en">EN</button></div>
+  </header>
+  <div class="steps" id="steps"></div>
+
+  <!-- Step 0: welcome + environment -->
+  <section class="card" data-step="0">
+    <h2 data-i18n="s0.h"></h2>
+    <p class="hint" data-i18n="s0.hint"></p>
+    <div class="env" id="env"></div>
+    <label data-i18n="s0.tone"></label>
+    <div class="choices" id="tone">
+      <div class="choice" data-v="direct"><b data-i18n="tone.direct"></b><small data-i18n="tone.direct.s"></small></div>
+      <div class="choice" data-v="gentle"><b data-i18n="tone.gentle"></b><small data-i18n="tone.gentle.s"></small></div>
+    </div>
+    <div class="nav"><span></span><button class="primary" data-next data-i18n="next"></button></div>
+  </section>
+
+  <!-- Step 1: wearable -->
+  <section class="card hidden" data-step="1">
+    <h2 data-i18n="s1.h"></h2>
+    <p class="hint" data-i18n="s1.hint"></p>
+    <div class="choices" id="wearable">
+      <div class="choice" data-v="garmin"><b>Garmin 佳明</b><small data-i18n="w.garmin"></small></div>
+      <div class="choice" data-v="coros"><b>Coros 高驰</b><small data-i18n="w.coros"></small></div>
+      <div class="choice" data-v="whoop"><b>WHOOP</b><small data-i18n="w.whoop"></small></div>
+      <div class="choice" data-v="apple"><b>Apple Watch</b><small data-i18n="w.apple"></small></div>
+      <div class="choice" data-v="none"><b data-i18n="w.none"></b><small data-i18n="w.none.s"></small></div>
+    </div>
+    <div id="regionBox" class="hidden">
+      <label data-i18n="s1.region"></label>
+      <div class="choices" id="region">
+        <div class="choice" data-v="global"><b data-i18n="region.global"></b></div>
+        <div class="choice" data-v="cn"><b data-i18n="region.cn"></b><small data-i18n="region.cn.s"></small></div>
+      </div>
+    </div>
+    <div id="appleBox" class="hidden">
+      <label data-i18n="s1.apple"></label>
+      <input type="text" id="appleExportDir" placeholder="~/Library/Mobile Documents/com~apple~CloudDocs/HealthExport">
+    </div>
+    <div class="nav"><button class="ghost" data-back data-i18n="back"></button><button class="primary" data-next data-i18n="next"></button></div>
+  </section>
+
+  <!-- Step 2: about you -->
+  <section class="card hidden" data-step="2">
+    <h2 data-i18n="s2.h"></h2>
+    <p class="hint" data-i18n="s2.hint"></p>
+    <div class="row">
+      <div><label data-i18n="f.name"></label><input type="text" id="name"></div>
+      <div><label data-i18n="f.age"></label><input type="number" id="age" min="10" max="100"></div>
+    </div>
+    <div class="row">
+      <div><label data-i18n="f.gender"></label>
+        <select id="gender"><option value="">—</option><option value="M" data-i18n="g.m"></option><option value="F" data-i18n="g.f"></option><option value="other" data-i18n="g.o"></option></select></div>
+      <div><label data-i18n="f.sport"></label>
+        <select id="sport">
+          <option value="running" data-i18n="sp.running"></option><option value="trail" data-i18n="sp.trail"></option>
+          <option value="hyrox" data-i18n="sp.hyrox"></option><option value="cycling" data-i18n="sp.cycling"></option>
+          <option value="triathlon" data-i18n="sp.triathlon"></option><option value="strength" data-i18n="sp.strength"></option>
+          <option value="general" data-i18n="sp.general"></option>
+        </select></div>
+    </div>
+    <label data-i18n="f.goal"></label><input type="text" id="goal" data-ph="ph.goal">
+    <div class="row">
+      <div><label data-i18n="f.runDays"></label><input type="number" id="runDays" min="0" max="7" value="3"></div>
+      <div><label data-i18n="f.strengthDays"></label><input type="number" id="strengthDays" min="0" max="7" value="2"></div>
+    </div>
+    <label data-i18n="f.race"></label>
+    <div class="row">
+      <input type="text" id="raceName" data-ph="ph.raceName">
+      <input type="date" id="raceDate">
+    </div>
+    <input type="text" id="raceTarget" data-ph="ph.raceTarget" style="margin-top:8px">
+    <label data-i18n="f.injuries"></label><textarea id="injuries" data-ph="ph.injuries"></textarea>
+    <div class="nav"><button class="ghost" data-back data-i18n="back"></button><button class="primary" data-next data-i18n="next"></button></div>
+  </section>
+
+  <!-- Step 3: where to store + optional Xunji -->
+  <section class="card hidden" data-step="3">
+    <h2 data-i18n="s3.h"></h2>
+    <p class="hint" data-i18n="s3.hint"></p>
+    <label data-i18n="f.dataDir"></label><input type="text" id="dataDir">
+    <p class="hint" data-i18n="s3.obsidian"></p>
+    <label data-i18n="f.xunji"></label><input type="password" id="xunjiToken" placeholder="xjllm_…">
+    <p class="hint" data-i18n="s3.xunjiHint"></p>
+    <div class="nav"><button class="ghost" data-back data-i18n="back"></button><button class="primary" data-next data-i18n="next"></button></div>
+  </section>
+
+  <!-- Step 4: review + install -->
+  <section class="card hidden" data-step="4">
+    <h2 data-i18n="s4.h"></h2>
+    <p class="hint" data-i18n="s4.hint"></p>
+    <pre id="review"></pre>
+    <div class="err hidden" id="err"></div>
+    <div class="nav"><button class="ghost" data-back data-i18n="back"></button><button class="primary" id="install" data-i18n="install"></button></div>
+  </section>
+
+  <!-- Step 5: done -->
+  <section class="card hidden" data-step="5">
+    <h2 data-i18n="s5.h"></h2>
+    <div id="mcpBlock"></div>
+    <h3 data-i18n="s5.next"></h3>
+    <ol class="next" id="nextSteps"></ol>
+    <details><summary data-i18n="s5.files"></summary><ul class="files" id="files"></ul></details>
+    <div class="nav"><span></span><button class="ghost" id="quit" data-i18n="quit"></button></div>
+  </section>
+</div>
+
+<script>
+const I18N = {
+  en: {
+    title: 'Coach Paddy Setup', next: 'Next', back: 'Back', install: 'Install', quit: 'Close setup',
+    's0.h': 'Welcome', 's0.hint': 'Five short steps. Nothing is written until you press Install on the last page. Your existing files are never overwritten.',
+    's0.tone': 'How should the coach talk to you?',
+    'tone.direct': 'Direct', 'tone.direct.s': 'Blunt, opinionated, swears when earned', 'tone.gentle': 'Gentle', 'tone.gentle.s': 'Still honest, no roasting',
+    'env.claude.ok': 'Claude Code CLI found', 'env.claude.bad': 'Claude Code CLI not found — install it first: npm i -g @anthropic-ai/claude-code',
+    'env.uvx.ok': 'uvx found (needed for Garmin / Coros)', 'env.uvx.warn': 'uvx not found — Garmin / Coros need it: https://docs.astral.sh/uv/getting-started/installation/',
+    'env.mcp': 'MCP servers already configured: ', 'env.mcp.none': 'No MCP servers configured yet (normal for a first install)',
+    'env.skill': 'The fitness-coach skill is already installed — it will be upgraded', 'env.config': 'An existing config was found; the form is prefilled with it',
+    's1.h': 'Which watch do you wear?', 's1.hint': 'Pick the one you wear to sleep. If you own two, pick the one that tracks your recovery — the coach reads sleep, HRV and resting HR from a single device.',
+    'w.garmin': 'Fills every metric. Reference device.', 'w.coros': 'Sleep, HRV, RHR, activities. No Body Battery.', 'w.whoop': 'Paid membership required. Recovery % ≈ Body Battery.',
+    'w.apple': 'Needs an iOS Shortcut. Several metrics unavailable.', 'w.none': 'No watch', 'w.none.s': 'Readiness from a few daily questions',
+    's1.region': 'Account region', 'region.global': 'Global', 'region.cn': 'China (中国区)', 'region.cn.s': 'garmin.cn / teamcnapi.coros.com accounts',
+    's1.apple': 'Folder where the Shortcut exports JSON (iCloud Drive)',
+    's2.h': 'About you', 's2.hint': 'This becomes the coach\'s memory file. Everything is editable later — it\'s just a text file.',
+    'f.name': 'Name', 'f.age': 'Age', 'f.gender': 'Gender', 'g.m': 'Male', 'g.f': 'Female', 'g.o': 'Other / prefer not to say',
+    'f.sport': 'Main sport', 'sp.running': 'Road running', 'sp.trail': 'Trail running', 'sp.hyrox': 'Hyrox / functional fitness', 'sp.cycling': 'Cycling', 'sp.triathlon': 'Triathlon', 'sp.strength': 'Strength training', 'sp.general': 'General fitness',
+    'f.goal': 'Goal (one sentence)', 'ph.goal': 'e.g. Sub-4 marathon in March, stay injury-free',
+    'f.runDays': 'Run / cardio days per week', 'f.strengthDays': 'Strength days per week',
+    'f.race': 'Target race (optional)', 'ph.raceName': 'Race name', 'ph.raceTarget': 'Target time, e.g. 3:59:00',
+    'f.injuries': 'Injuries or body parts to watch (optional, one per line)', 'ph.injuries': 'e.g. Left calf — strained in May, fine now but tight after long runs',
+    's3.h': 'Where to keep your data', 's3.hint': 'The coach writes plain markdown files: Coach Memory, Training Plan, Athlete Bio Data and weekly logs. You own them.',
+    'f.dataDir': 'Data folder', 's3.obsidian': 'Use Obsidian? Point this at a folder inside your vault (e.g. …/MyVault/Fitness). Otherwise the default is fine.',
+    'f.xunji': 'Xunji (训记) API token — optional', 's3.xunjiHint': 'Only if you log strength training in the Xunji app. The token is stored in ~/.claude/fitness-coach/secrets.json, never in the skill file.',
+    's4.h': 'Review', 's4.hint': 'Pressing Install will: copy the skill into ~/.claude/skills, write config.json, create your data folder and three memory files. Existing files are kept.',
+    's5.h': 'Installed ✅', 's5.next': 'Next steps', 's5.files': 'Files written / kept',
+    'mcp.h': 'One command left — run this in your terminal:', 'mcp.auth': 'Then log in to your watch account once:', 'mcp.copy': 'Copy', 'mcp.copied': 'Copied',
+    'n1': 'Run the command above (it connects your watch to Claude Code).', 'n2': 'Start Claude Code: <code>claude</code>', 'n3': 'Type <code>/fitness-coach check</code> — the coach tests every connection and tells you what to fix.',
+    'n4': 'Tomorrow morning: <code>/fitness-coach morning</code>. After training: <code>/fitness-coach evening</code>.', 'n5': 'The first 28 days build your personal baseline; reports say so until then.',
+    'err.wearable': 'Pick a watch (or "No watch").', 'err.dataDir': 'Data folder is required.', 'err.apple': 'Apple Watch needs the export folder.',
+    'rv.lang': 'Language', 'rv.tone': 'Tone', 'rv.wearable': 'Wearable', 'rv.region': 'Region', 'rv.data': 'Data folder', 'rv.xunji': 'Xunji token', 'rv.yes': 'provided', 'rv.no': 'none', 'rv.plan': 'Weekly skeleton', 'rv.days': 'run days · strength days',
+    kept: 'kept (already existed)',
+  },
+  zh: {
+    title: 'Coach Paddy 安装向导', next: '下一步', back: '上一步', install: '安装', quit: '关闭向导',
+    's0.h': '欢迎', 's0.hint': '一共五步。按最后一页的「安装」之前不会写入任何东西。已经存在的文件不会被覆盖。',
+    's0.tone': '希望教练怎么跟你说话？',
+    'tone.direct': '直接', 'tone.direct.s': '有话直说，有立场，该骂就骂', 'tone.gentle': '温和', 'tone.gentle.s': '照样诚实，但不骂人',
+    'env.claude.ok': '已找到 Claude Code 命令行', 'env.claude.bad': '没找到 Claude Code 命令行，先安装：npm i -g @anthropic-ai/claude-code',
+    'env.uvx.ok': '已找到 uvx（佳明 / 高驰需要）', 'env.uvx.warn': '没找到 uvx，佳明 / 高驰需要它：https://docs.astral.sh/uv/getting-started/installation/',
+    'env.mcp': '已配置的 MCP 服务器：', 'env.mcp.none': '还没有配置任何 MCP 服务器（第一次安装很正常）',
+    'env.skill': 'fitness-coach 技能已经装过，这次会升级', 'env.config': '发现已有配置，表单已按它预填',
+    's1.h': '你戴哪块表？', 's1.hint': '选睡觉时戴的那块。有两块表的话，选记录恢复数据的那块：教练只从一块设备读睡眠、HRV 和静息心率。',
+    'w.garmin': '所有指标齐全，参考设备', 'w.coros': '睡眠、HRV、静息心率、活动。没有 Body Battery', 'w.whoop': '需要付费会员。Recovery % 相当于 Body Battery',
+    'w.apple': '要配一个 iOS 快捷指令，部分指标拿不到', 'w.none': '没有手表', 'w.none.s': '每天回答几个问题算准备度',
+    's1.region': '账号区域', 'region.global': '国际区', 'region.cn': '中国区', 'region.cn.s': 'garmin.cn / teamcnapi.coros.com 的账号',
+    's1.apple': '快捷指令导出 JSON 的文件夹（iCloud 云盘）',
+    's2.h': '关于你', 's2.hint': '这些会写进教练的记忆文件。以后随时可以改，它就是一个文本文件。',
+    'f.name': '姓名', 'f.age': '年龄', 'f.gender': '性别', 'g.m': '男', 'g.f': '女', 'g.o': '其他 / 不想说',
+    'f.sport': '主项', 'sp.running': '路跑', 'sp.trail': '越野跑', 'sp.hyrox': 'Hyrox / 功能性体能', 'sp.cycling': '骑行', 'sp.triathlon': '铁人三项', 'sp.strength': '力量训练', 'sp.general': '综合健身',
+    'f.goal': '目标（一句话）', 'ph.goal': '例：3 月全马破 4，不受伤',
+    'f.runDays': '每周跑步 / 有氧天数', 'f.strengthDays': '每周力量天数',
+    'f.race': '目标赛事（可选）', 'ph.raceName': '赛事名称', 'ph.raceTarget': '目标成绩，例 3:59:00',
+    'f.injuries': '伤病或需要盯的部位（可选，一行一个）', 'ph.injuries': '例：左小腿，5 月拉伤过，现在没事但长距离后发紧',
+    's3.h': '数据存在哪', 's3.hint': '教练只写普通的 markdown 文件：Coach Memory、Training Plan、Athlete Bio Data 和每周日志。数据归你。',
+    'f.dataDir': '数据文件夹', 's3.obsidian': '用 Obsidian？填 vault 里的一个文件夹（如 …/我的库/Fitness）。不用的话默认值就行。',
+    'f.xunji': '训记 API token（可选）', 's3.xunjiHint': '只有用训记 App 记力量训练才需要。token 存在 ~/.claude/fitness-coach/secrets.json，不会写进技能文件。',
+    's4.h': '确认', 's4.hint': '按「安装」会：把技能复制到 ~/.claude/skills，写入 config.json，创建数据文件夹和三个记忆文件。已有文件保留不动。',
+    's5.h': '安装完成 ✅', 's5.next': '接下来', 's5.files': '写入 / 保留的文件',
+    'mcp.h': '还剩一条命令，在终端里运行：', 'mcp.auth': '然后登录一次手表账号：', 'mcp.copy': '复制', 'mcp.copied': '已复制',
+    'n1': '运行上面的命令（把手表接到 Claude Code）。', 'n2': '启动 Claude Code：<code>claude</code>', 'n3': '输入 <code>/fitness-coach check</code>，教练会测试每个连接并告诉你要修什么。',
+    'n4': '明天早上：<code>/fitness-coach morning</code>。训练后：<code>/fitness-coach evening</code>。', 'n5': '前 28 天在建立你的个人基线，报告里会标注。',
+    'err.wearable': '请选一块表（或「没有手表」）。', 'err.dataDir': '数据文件夹必填。', 'err.apple': 'Apple Watch 需要填导出文件夹。',
+    'rv.lang': '语言', 'rv.tone': '风格', 'rv.wearable': '设备', 'rv.region': '区域', 'rv.data': '数据文件夹', 'rv.xunji': '训记 token', 'rv.yes': '已填', 'rv.no': '无', 'rv.plan': '周结构', 'rv.days': '跑步天 · 力量天',
+    kept: '保留（已存在）',
+  },
+};
+
+const state = { language: (navigator.language || '').startsWith('zh') ? 'zh' : 'en', tone: 'direct', wearable: '', region: 'global', step: 0 };
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const t = (k) => (I18N[state.language][k] ?? I18N.en[k] ?? k);
+
+function applyI18n() {
+  document.documentElement.lang = state.language;
+  $$('[data-i18n]').forEach((el) => { el.innerHTML = t(el.dataset.i18n); });
+  $$('[data-ph]').forEach((el) => { el.placeholder = t(el.dataset.ph); });
+  $$('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === state.language));
+  renderEnv();
+}
+
+function showStep(i) {
+  state.step = i;
+  $$('[data-step]').forEach((s) => s.classList.toggle('hidden', Number(s.dataset.step) !== i));
+  $('#steps').innerHTML = [0, 1, 2, 3, 4, 5].map((k) => `<span class="${k <= i ? 'done' : ''}"></span>`).join('');
+  if (i === 4) renderReview();
+  window.scrollTo(0, 0);
+}
+
+let env = null;
+function renderEnv() {
+  if (!env) return;
+  const lines = [];
+  lines.push(`<div class="${env.hasClaude ? 'ok' : 'bad'}">${t(env.hasClaude ? 'env.claude.ok' : 'env.claude.bad')}</div>`);
+  lines.push(`<div class="${env.hasUvx ? 'ok' : 'warn'}">${t(env.hasUvx ? 'env.uvx.ok' : 'env.uvx.warn')}</div>`);
+  lines.push(`<div>${env.mcpServers.length ? t('env.mcp') + env.mcpServers.join(', ') : t('env.mcp.none')}</div>`);
+  if (env.skillInstalled) lines.push(`<div class="warn">${t('env.skill')}</div>`);
+  if (env.config) lines.push(`<div class="warn">${t('env.config')}</div>`);
+  $('#env').innerHTML = lines.join('');
+}
+
+function pick(groupId, key, v, onChange) {
+  const g = $('#' + groupId);
+  g.addEventListener('click', (e) => {
+    const c = e.target.closest('.choice'); if (!c) return;
+    state[key] = c.dataset.v;
+    $$('.choice', g).forEach((x) => x.classList.toggle('on', x === c));
+    onChange && onChange(c.dataset.v);
+  });
+  if (v) { state[key] = v; const c = $(`.choice[data-v="${v}"]`, g); c && c.classList.add('on'); }
+}
+
+function onWearable(v) {
+  $('#regionBox').classList.toggle('hidden', !(v === 'garmin' || v === 'coros'));
+  $('#appleBox').classList.toggle('hidden', v !== 'apple');
+}
+
+function answers() {
+  const val = (id) => $('#' + id).value.trim();
+  return {
+    language: state.language, tone: state.tone, wearable: state.wearable, region: state.region,
+    appleExportDir: val('appleExportDir'), name: val('name'), age: val('age'), gender: val('gender'), sport: val('sport'),
+    goal: val('goal'), runDays: val('runDays'), strengthDays: val('strengthDays'),
+    raceName: val('raceName'), raceDate: val('raceDate'), raceTarget: val('raceTarget'), injuries: val('injuries'),
+    dataDir: val('dataDir'), xunjiToken: val('xunjiToken'),
+  };
+}
+
+function validateStep(i) {
+  const a = answers();
+  if (i === 1) {
+    if (!a.wearable) return t('err.wearable');
+    if (a.wearable === 'apple' && !a.appleExportDir) return t('err.apple');
+  }
+  if (i === 3 && !a.dataDir) return t('err.dataDir');
+  return null;
+}
+
+function renderReview() {
+  const a = answers();
+  const rows = [
+    [t('rv.lang'), a.language === 'zh' ? '中文' : 'English'], [t('rv.tone'), t('tone.' + a.tone)],
+    [t('rv.wearable'), a.wearable === 'none' ? t('w.none') : a.wearable], ...((a.wearable === 'garmin' || a.wearable === 'coros') ? [[t('rv.region'), t('region.' + a.region)]] : []),
+    [t('f.name'), a.name || '—'], [t('f.sport'), t('sp.' + a.sport)], [t('f.goal'), a.goal || '—'],
+    [t('rv.days'), `${a.runDays} · ${a.strengthDays}`], [t('rv.data'), a.dataDir], [t('rv.xunji'), a.xunjiToken ? t('rv.yes') : t('rv.no')],
+  ];
+  $('#review').textContent = rows.map(([k, v]) => `${k.padEnd(14)} ${v}`).join('\n');
+  $('#err').classList.add('hidden');
+}
+
+function cmdBlock(label, cmd) {
+  const id = 'c' + Math.random().toString(36).slice(2);
+  return `<p class="hint" style="margin:14px 0 6px">${label}</p><div class="cmd"><pre id="${id}">${cmd.replace(/</g, '&lt;')}</pre><button class="ghost" onclick="copyCmd('${id}', this)">${t('mcp.copy')}</button></div>`;
+}
+window.copyCmd = (id, btn) => { navigator.clipboard.writeText($('#' + id).textContent).then(() => { btn.textContent = t('mcp.copied'); setTimeout(() => btn.textContent = t('mcp.copy'), 1500); }); };
+
+function renderDone(r) {
+  let html = '';
+  if (r.commands.add) html += cmdBlock(t('mcp.h'), r.commands.add);
+  if (r.commands.auth) html += cmdBlock(t('mcp.auth'), r.commands.auth);
+  if (r.commands.note) html += `<p class="hint">${r.commands.note}</p>`;
+  $('#mcpBlock').innerHTML = html;
+  const steps = [r.commands.add ? 'n1' : null, 'n2', 'n3', 'n4', 'n5'].filter(Boolean);
+  $('#nextSteps').innerHTML = steps.map((k) => `<li>${t(k)}</li>`).join('');
+  $('#files').innerHTML = r.written.map((p) => `<li>${p}</li>`).join('') + r.skipped.map((p) => `<li>${p} — ${t('kept')}</li>`).join('');
+}
+
+async function install() {
+  const btn = $('#install'); btn.disabled = true;
+  try {
+    const res = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(answers()) });
+    const r = await res.json();
+    if (!r.ok) { $('#err').textContent = (r.errors || [r.error]).map((e) => t('err.' + e) || e).join(' '); $('#err').classList.remove('hidden'); return; }
+    renderDone(r); showStep(5);
+  } catch (e) {
+    $('#err').textContent = String(e); $('#err').classList.remove('hidden');
+  } finally { btn.disabled = false; }
+}
+
+// ---- wire up ----
+$$('.lang button').forEach((b) => b.addEventListener('click', () => { state.language = b.dataset.lang; applyI18n(); if (state.step === 4) renderReview(); }));
+$$('[data-next]').forEach((b) => b.addEventListener('click', () => { const e = validateStep(state.step); if (e) { alert(e); return; } showStep(state.step + 1); }));
+$$('[data-back]').forEach((b) => b.addEventListener('click', () => showStep(state.step - 1)));
+$('#install').addEventListener('click', install);
+$('#quit').addEventListener('click', async () => { try { await fetch('/api/exit', { method: 'POST' }); } catch {} document.body.innerHTML = '<div class="wrap"><div class="card"><h2>✅</h2></div></div>'; });
+pick('tone', 'tone', 'direct');
+pick('wearable', 'wearable', '', onWearable);
+pick('region', 'region', 'global');
+
+fetch('/api/status').then((r) => r.json()).then((s) => {
+  env = s;
+  $('#dataDir').value = (s.config && s.config.dataDir) || s.defaultDataDir;
+  if (s.config) {
+    state.language = s.config.language || state.language;
+    if (s.config.tone) pick('tone', 'tone', s.config.tone);
+    if (s.config.wearable) { pick('wearable', 'wearable', s.config.wearable); onWearable(s.config.wearable); }
+    if (s.config.region) pick('region', 'region', s.config.region);
+    if (s.config.appleExportDir) $('#appleExportDir').value = s.config.appleExportDir;
+    if (s.config.athlete) { $('#name').value = s.config.athlete.name || ''; if (s.config.athlete.sport) $('#sport').value = s.config.athlete.sport; }
+  }
+  applyI18n();
+}).catch(() => applyI18n());
+applyI18n(); showStep(0);
+</script>
+</body>
+</html>

@@ -2,7 +2,8 @@
 // Parse local Obsidian training files → public/data.json
 // 从本地 Obsidian 训练文件解析数据 → public/data.json
 //
-// Usage:  FITNESS_DIR="/path/to/vault/Fitness" node scripts/build-data.mjs
+// Usage:  node scripts/build-data.mjs            (reads dataDir from ~/.claude/fitness-coach/config.json)
+//         FITNESS_DIR="/path/to/vault/Fitness" node scripts/build-data.mjs   (explicit override)
 //
 // The PARSER functions below are generic — they read the markdown table
 // formats produced by the Coach Paddy skill (Athlete Bio Data / Training Plan /
@@ -13,9 +14,17 @@
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
 
-// Point this at your Obsidian vault's Fitness folder (or set FITNESS_DIR env).
-const FITNESS_DIR = process.env.FITNESS_DIR || '/path/to/your/Obsidian-vault/Fitness';
+// Where the markdown files live: FITNESS_DIR env → dataDir from `npm run setup`'s config → placeholder.
+function configDataDir() {
+  try {
+    return JSON.parse(readFileSync(join(homedir(), '.claude', 'fitness-coach', 'config.json'), 'utf8')).dataDir || null;
+  } catch {
+    return null;
+  }
+}
+const FITNESS_DIR = process.env.FITNESS_DIR || configDataDir() || '/path/to/your/Obsidian-vault/Fitness';
 // Diet log written by the WeChat food pipeline (food.mjs / food-live.mjs).
 // Point DIET_LOG at your food-log.jsonl, e.g. DIET_LOG=/path/to/weixin-test/food-log.jsonl
 const DIET_LOG = process.env.DIET_LOG || join(FITNESS_DIR, '..', '..', 'weixin-test', 'food-log.jsonl');
