@@ -93,11 +93,13 @@ which watch you wear → a bit about you (age, sport, goal, injuries, training d
 where to keep your files → **Install**. Nothing is written before you press Install. It then:
 
 - installs the skill into `~/.claude/skills/fitness-coach/` (plus the Apple Watch adapter if you picked Apple Watch)
-- writes `~/.claude/fitness-coach/config.json` (device, region, data folder, tone, language) and, for Xunji users, `secrets.json` with the token
+- writes `~/.claude/fitness-coach/config.json` (device, region, data folder, coaching tone — direct / gentle / analyst / drill sergeant / training buddy — and language) and, for Xunji users, `secrets.json` with the token (no token yet? paste it to the coach in chat later)
 - creates your data folder with **Coach Memory**, **Training Plan** (a weekly skeleton built from your answers) and **Athlete Bio Data**, plus `Logs/` — **existing files are never overwritten**
 - shows the one `claude mcp add …` command that connects your watch, with a Copy button
 
-Run that command, start `claude`, and type:
+**Not a terminal person?** In the Claude desktop app, paste the repo link and say *"set up Coach Paddy"* — Claude clones it, runs `npm run setup`, and opens the form for you. The remaining `claude mcp add …` command can be pasted back to Claude as well.
+
+Run that command, start `claude` (or open the Code tab in the desktop app), and type:
 
 ```
 /fitness-coach check
@@ -356,11 +358,13 @@ npm run setup
 浏览器会打开一张表单（中文 / English），五页：教练说话风格 → 戴哪块表 → 关于你（年龄、主项、目标、伤病、每周练几天）→ 数据放哪 → **安装**。按「安装」之前不写任何东西。然后它会：
 
 - 把技能装到 `~/.claude/skills/fitness-coach/`（选了 Apple Watch 会一并装适配器）
-- 写入 `~/.claude/fitness-coach/config.json`（设备、区域、数据文件夹、风格、语言）；用训记的话 token 存到 `secrets.json`
+- 写入 `~/.claude/fitness-coach/config.json`（设备、区域、数据文件夹、教练风格 5 选 1、语言）；用训记的话 token 存到 `secrets.json`（现在没有 token？以后在对话里发给教练就行）
 - 创建数据文件夹和三个记忆文件：**Coach Memory**、按你的答案生成周结构骨架的 **Training Plan**、**Athlete Bio Data**，以及 `Logs/`。**已有文件不会被覆盖**
 - 显示那一条把手表接到 Claude Code 的 `claude mcp add …` 命令，带复制按钮
 
-运行那条命令，启动 `claude`，输入 `/fitness-coach check`：教练会测试手表、文件和训记连接，哪里不通直接告诉你怎么修。第二天早上 `/fitness-coach morning`。前 28 天在建立你的个人基线，报告里会标注。
+**不习惯用终端？** 在 Claude 桌面 App 里把 repo 链接贴给它，说「帮我安装教练」，Claude 会自己克隆、运行 `npm run setup`、打开表单。剩下那条 `claude mcp add …` 命令也可以直接贴回去让它运行。
+
+运行那条命令，启动 `claude`（或桌面 App 的 Code 标签页），输入 `/fitness-coach check`：教练会测试手表、文件和训记连接，哪里不通直接告诉你怎么修。第二天早上 `/fitness-coach morning`。前 28 天在建立你的个人基线，报告里会标注。
 
 **让 AI agent 装？** 跟它说：克隆 repo，运行 `npm run setup`，把表单转述给我填。打不开浏览器的话，英文部分的 Manual setup 是同样的步骤。两条不能搞错：`fitness-coach.md` 永远要装；`apple-watch-fitness-coach.md` 只给 Apple Watch 用户加装，不是替代。
 

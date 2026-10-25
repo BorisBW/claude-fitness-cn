@@ -58,9 +58,13 @@ export function coachMemory(a) {
   const sport = (SPORT_LABEL[a.sport] || SPORT_LABEL.general)[zh ? 1 : 0];
   const race = a.raceName ? `${a.raceName}${a.raceDate ? ` (${a.raceDate})` : ''}${a.raceTarget ? ` → ${a.raceTarget}` : ''}` : (zh ? '暂无目标赛事' : 'No target race yet');
   const injuries = (a.injuries || '').trim();
-  const tone = a.tone === 'gentle'
-    ? (zh ? '温和：直说问题，不骂人，不用脏话' : 'Gentle: say the problem plainly, no swearing, no roasting')
-    : (zh ? '直接：有话直说，该骂就骂' : 'Direct: blunt, occasional swearing when earned');
+  const tone = ({
+    direct: ['Direct: blunt, opinionated, swears when earned', '直接：有话直说，有立场，该骂就骂'],
+    gentle: ['Gentle: honest, no swearing, no roasting', '温和：照样诚实，不骂人不用脏话'],
+    analyst: ['Analyst: numbers first, one-line verdict, no banter', '分析师：数据优先，结论一句话，不闲聊'],
+    drill: ['Drill sergeant: short orders, zero excuses', '魔鬼教练：短句命令，不接受借口'],
+    buddy: ['Training buddy: warm, encouraging, celebrates small wins', '陪练搭子：温暖鼓励，小进步也庆祝'],
+  }[a.tone] || ['Direct', '直接'])[zh ? 1 : 0];
 
   if (zh) return `# Coach Memory
 
@@ -75,7 +79,7 @@ export function coachMemory(a) {
 - **目标赛事**: ${race}
 - **每周训练**: 跑/有氧 ${n(a.runDays)} 天 · 力量 ${n(a.strengthDays)} 天
 - **设备**: ${WEARABLE_LABEL[a.wearable]}${a.region === 'cn' && (a.wearable === 'garmin' || a.wearable === 'coros') ? '（中国区账号）' : ''}
-- **力量记录**: ${a.xunjiToken ? '训记（Xunji）' : '无（晚上口头报）'}
+- **力量记录**: ${a.xunjiToken ? '训记（Xunji）' : '无，晚上口头报。以后随时可以把训记 token 发给教练接上'}
 - **教练风格**: ${tone}
 
 ## 伤病 / 需要盯的部位
@@ -104,7 +108,7 @@ ${injuries ? injuries.split('\n').map((l) => `- ${l.trim()}`).filter((l) => l !=
 - **Target race**: ${race}
 - **Weekly schedule**: ${n(a.runDays)} run/cardio days · ${n(a.strengthDays)} strength days
 - **Wearable**: ${WEARABLE_LABEL[a.wearable]}${a.region === 'cn' && (a.wearable === 'garmin' || a.wearable === 'coros') ? ' (China-region account)' : ''}
-- **Strength log**: ${a.xunjiToken ? 'Xunji (训记)' : 'none — athlete reports verbally in the evening'}
+- **Strength log**: ${a.xunjiToken ? 'Xunji (训记)' : 'none — athlete reports verbally in the evening. A Xunji token can be handed to the coach in chat any time'}
 - **Coaching tone**: ${tone}
 
 ## Injuries / things to watch

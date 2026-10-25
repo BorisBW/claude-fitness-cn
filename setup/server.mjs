@@ -106,7 +106,7 @@ function validate(a) {
   if (!a.dataDir || typeof a.dataDir !== 'string') errors.push('dataDir');
   if (a.wearable === 'apple' && !a.appleExportDir) errors.push('appleExportDir');
   if (!['zh', 'en'].includes(a.language)) a.language = 'en';
-  if (!['direct', 'gentle'].includes(a.tone)) a.tone = 'direct';
+  if (!['direct', 'gentle', 'analyst', 'drill', 'buddy'].includes(a.tone)) a.tone = 'direct';
   if (!['cn', 'global'].includes(a.region)) a.region = 'global';
   return errors;
 }
@@ -156,10 +156,9 @@ function apply(a) {
   mkdirSync(skillDir, { recursive: true });
   copyFileSync(join(ROOT, 'fitness-coach.md'), join(skillDir, 'SKILL.md'));
   written.push(join(skillDir, 'SKILL.md'));
-  if (config.xunji) {
-    copyFileSync(join(ROOT, 'xunji-movements.md'), join(skillDir, 'xunji-movements.md'));
-    written.push(join(skillDir, 'xunji-movements.md'));
-  }
+  // Always ship the movement table: the athlete can hand over a Xunji token later in chat.
+  copyFileSync(join(ROOT, 'xunji-movements.md'), join(skillDir, 'xunji-movements.md'));
+  written.push(join(skillDir, 'xunji-movements.md'));
   if (a.wearable === 'apple') {
     const appleDir = join(SKILLS_DIR, 'apple-watch-fitness-coach');
     mkdirSync(appleDir, { recursive: true });

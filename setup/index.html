@@ -72,6 +72,9 @@
     <div class="choices" id="tone">
       <div class="choice" data-v="direct"><b data-i18n="tone.direct"></b><small data-i18n="tone.direct.s"></small></div>
       <div class="choice" data-v="gentle"><b data-i18n="tone.gentle"></b><small data-i18n="tone.gentle.s"></small></div>
+      <div class="choice" data-v="analyst"><b data-i18n="tone.analyst"></b><small data-i18n="tone.analyst.s"></small></div>
+      <div class="choice" data-v="drill"><b data-i18n="tone.drill"></b><small data-i18n="tone.drill.s"></small></div>
+      <div class="choice" data-v="buddy"><b data-i18n="tone.buddy"></b><small data-i18n="tone.buddy.s"></small></div>
     </div>
     <div class="nav"><span></span><button class="primary" data-next data-i18n="next"></button></div>
   </section>
@@ -173,6 +176,7 @@ const I18N = {
     's0.h': 'Welcome', 's0.hint': 'Five short steps. Nothing is written until you press Install on the last page. Your existing files are never overwritten.',
     's0.tone': 'How should the coach talk to you?',
     'tone.direct': 'Direct', 'tone.direct.s': 'Blunt, opinionated, swears when earned', 'tone.gentle': 'Gentle', 'tone.gentle.s': 'Still honest, no roasting',
+    'tone.analyst': 'Analyst', 'tone.analyst.s': 'Numbers first, verdict in one line, no banter', 'tone.drill': 'Drill sergeant', 'tone.drill.s': 'Short orders, zero excuses', 'tone.buddy': 'Training buddy', 'tone.buddy.s': 'Warm, encouraging, celebrates small wins',
     'env.claude.ok': 'Claude Code CLI found', 'env.claude.bad': 'Claude Code CLI not found — install it first: npm i -g @anthropic-ai/claude-code',
     'env.uvx.ok': 'uvx found (needed for Garmin / Coros)', 'env.uvx.warn': 'uvx not found — Garmin / Coros need it: https://docs.astral.sh/uv/getting-started/installation/',
     'env.mcp': 'MCP servers already configured: ', 'env.mcp.none': 'No MCP servers configured yet (normal for a first install)',
@@ -191,11 +195,11 @@ const I18N = {
     'f.injuries': 'Injuries or body parts to watch (optional, one per line)', 'ph.injuries': 'e.g. Left calf — strained in May, fine now but tight after long runs',
     's3.h': 'Where to keep your data', 's3.hint': 'The coach writes plain markdown files: Coach Memory, Training Plan, Athlete Bio Data and weekly logs. You own them.',
     'f.dataDir': 'Data folder', 's3.obsidian': 'Use Obsidian? Point this at a folder inside your vault (e.g. …/MyVault/Fitness). Otherwise the default is fine.',
-    'f.xunji': 'Xunji (训记) API token — optional', 's3.xunjiHint': 'Only if you log strength training in the Xunji app. The token is stored in ~/.claude/fitness-coach/secrets.json, never in the skill file.',
+    'f.xunji': 'Xunji (训记) API token — optional', 's3.xunjiHint': 'Only if you log strength training in the Xunji app. Don\'t have it now? Skip — you can paste the token to the coach in chat any time later. It is stored in ~/.claude/fitness-coach/secrets.json, never in the skill file.',
     's4.h': 'Review', 's4.hint': 'Pressing Install will: copy the skill into ~/.claude/skills, write config.json, create your data folder and three memory files. Existing files are kept.',
     's5.h': 'Installed ✅', 's5.next': 'Next steps', 's5.files': 'Files written / kept',
-    'mcp.h': 'One command left — run this in your terminal:', 'mcp.auth': 'Then log in to your watch account once:', 'mcp.copy': 'Copy', 'mcp.copied': 'Copied',
-    'n1': 'Run the command above (it connects your watch to Claude Code).', 'n2': 'Start Claude Code: <code>claude</code>', 'n3': 'Type <code>/fitness-coach check</code> — the coach tests every connection and tells you what to fix.',
+    'mcp.h': 'One command left. Run it in a terminal, or paste it to Claude in the desktop app and ask it to run it:', 'mcp.auth': 'Then log in to your watch account once:', 'mcp.copy': 'Copy', 'mcp.copied': 'Copied',
+    'n1': 'Run the command above (it connects your watch to Claude Code), then restart Claude Code.', 'n2': 'Open Claude Code — <code>claude</code> in a terminal, or the Code tab in the Claude desktop app.', 'n3': 'Type <code>/fitness-coach check</code> — the coach tests every connection and tells you what to fix.',
     'n4': 'Tomorrow morning: <code>/fitness-coach morning</code>. After training: <code>/fitness-coach evening</code>.', 'n5': 'The first 28 days build your personal baseline; reports say so until then.',
     'err.wearable': 'Pick a watch (or "No watch").', 'err.dataDir': 'Data folder is required.', 'err.apple': 'Apple Watch needs the export folder.',
     'rv.lang': 'Language', 'rv.tone': 'Tone', 'rv.wearable': 'Wearable', 'rv.region': 'Region', 'rv.data': 'Data folder', 'rv.xunji': 'Xunji token', 'rv.yes': 'provided', 'rv.no': 'none', 'rv.plan': 'Weekly skeleton', 'rv.days': 'run days · strength days',
@@ -206,6 +210,7 @@ const I18N = {
     's0.h': '欢迎', 's0.hint': '一共五步。按最后一页的「安装」之前不会写入任何东西。已经存在的文件不会被覆盖。',
     's0.tone': '希望教练怎么跟你说话？',
     'tone.direct': '直接', 'tone.direct.s': '有话直说，有立场，该骂就骂', 'tone.gentle': '温和', 'tone.gentle.s': '照样诚实，但不骂人',
+    'tone.analyst': '分析师', 'tone.analyst.s': '数据优先，结论一句话，不闲聊', 'tone.drill': '魔鬼教练', 'tone.drill.s': '短句命令，不接受借口', 'tone.buddy': '陪练搭子', 'tone.buddy.s': '温暖鼓励，小进步也庆祝',
     'env.claude.ok': '已找到 Claude Code 命令行', 'env.claude.bad': '没找到 Claude Code 命令行，先安装：npm i -g @anthropic-ai/claude-code',
     'env.uvx.ok': '已找到 uvx（佳明 / 高驰需要）', 'env.uvx.warn': '没找到 uvx，佳明 / 高驰需要它：https://docs.astral.sh/uv/getting-started/installation/',
     'env.mcp': '已配置的 MCP 服务器：', 'env.mcp.none': '还没有配置任何 MCP 服务器（第一次安装很正常）',
@@ -224,11 +229,11 @@ const I18N = {
     'f.injuries': '伤病或需要盯的部位（可选，一行一个）', 'ph.injuries': '例：左小腿，5 月拉伤过，现在没事但长距离后发紧',
     's3.h': '数据存在哪', 's3.hint': '教练只写普通的 markdown 文件：Coach Memory、Training Plan、Athlete Bio Data 和每周日志。数据归你。',
     'f.dataDir': '数据文件夹', 's3.obsidian': '用 Obsidian？填 vault 里的一个文件夹（如 …/我的库/Fitness）。不用的话默认值就行。',
-    'f.xunji': '训记 API token（可选）', 's3.xunjiHint': '只有用训记 App 记力量训练才需要。token 存在 ~/.claude/fitness-coach/secrets.json，不会写进技能文件。',
+    'f.xunji': '训记 API token（可选）', 's3.xunjiHint': '只有用训记 App 记力量训练才需要。现在没有就跳过，以后在对话里把 token 发给教练就行。token 存在 ~/.claude/fitness-coach/secrets.json，不会写进技能文件。',
     's4.h': '确认', 's4.hint': '按「安装」会：把技能复制到 ~/.claude/skills，写入 config.json，创建数据文件夹和三个记忆文件。已有文件保留不动。',
     's5.h': '安装完成 ✅', 's5.next': '接下来', 's5.files': '写入 / 保留的文件',
-    'mcp.h': '还剩一条命令，在终端里运行：', 'mcp.auth': '然后登录一次手表账号：', 'mcp.copy': '复制', 'mcp.copied': '已复制',
-    'n1': '运行上面的命令（把手表接到 Claude Code）。', 'n2': '启动 Claude Code：<code>claude</code>', 'n3': '输入 <code>/fitness-coach check</code>，教练会测试每个连接并告诉你要修什么。',
+    'mcp.h': '还剩一条命令。在终端运行，或者贴给桌面 App 里的 Claude 让它帮你运行：', 'mcp.auth': '然后登录一次手表账号：', 'mcp.copy': '复制', 'mcp.copied': '已复制',
+    'n1': '运行上面的命令（把手表接到 Claude Code），然后重启 Claude Code。', 'n2': '打开 Claude Code：终端输入 <code>claude</code>，或者用 Claude 桌面 App 的 Code 标签页。', 'n3': '输入 <code>/fitness-coach check</code>，教练会测试每个连接并告诉你要修什么。',
     'n4': '明天早上：<code>/fitness-coach morning</code>。训练后：<code>/fitness-coach evening</code>。', 'n5': '前 28 天在建立你的个人基线，报告里会标注。',
     'err.wearable': '请选一块表（或「没有手表」）。', 'err.dataDir': '数据文件夹必填。', 'err.apple': 'Apple Watch 需要填导出文件夹。',
     'rv.lang': '语言', 'rv.tone': '风格', 'rv.wearable': '设备', 'rv.region': '区域', 'rv.data': '数据文件夹', 'rv.xunji': '训记 token', 'rv.yes': '已填', 'rv.no': '无', 'rv.plan': '周结构', 'rv.days': '跑步天 · 力量天',
