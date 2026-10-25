@@ -141,7 +141,12 @@ function apply(a) {
     dataDir,
     appleExportDir: a.wearable === 'apple' ? expandHome(a.appleExportDir.trim()) : null,
     xunji: Boolean(a.xunjiToken && a.xunjiToken.trim()),
-    athlete: { name: a.name || '', sport: a.sport || 'running' },
+    athlete: {
+      name: a.name || '', age: a.age ? Number(a.age) : null, gender: a.gender || '', sport: a.sport || 'running',
+      goal: a.goal || '', raceName: a.raceName || '', raceDate: a.raceDate || '', raceTarget: a.raceTarget || '',
+      runDays: Number(a.runDays) || 0, strengthDays: Number(a.strengthDays) || 0,
+      injuries: String(a.injuries || '').split('\n').map((s) => s.trim()).filter(Boolean),
+    },
     createdAt: new Date().toISOString().slice(0, 10),
   };
   write(CONF_FILE, JSON.stringify(config, null, 2) + '\n', { overwrite: true });

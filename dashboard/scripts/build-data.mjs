@@ -406,6 +406,29 @@ const curated = {
   },
 };
 
+// Personalise from the `npm run setup` answers when they exist. Only the profile-shaped
+// fields are replaced (phase, race, goals, injuries, PBs, weight); the sport-specific
+// example sections (trail / Hyrox / physio) stay as examples until you edit them above.
+function applyConfig(c) {
+  let cfg;
+  try { cfg = JSON.parse(readFileSync(join(homedir(), '.claude', 'fitness-coach', 'config.json'), 'utf8')); } catch { return; }
+  const a = cfg.athlete || {};
+  if (a.goal) c.phase = a.goal;
+  c.weight = { current: '—', asOf: '', target: '' };
+  c.pbs = [];
+  c.injuries = (a.injuries || []).map((name) => ({ name, status: 'watching', note: '' }));
+  c.goals = {
+    firstPriority: a.goal ? [a.goal] : [],
+    performance: a.raceName ? [{ year: (a.raceDate || '').slice(0, 4) || '—', goal: `${a.raceName}${a.raceTarget ? ' · ' + a.raceTarget : ''}` }] : [],
+  };
+  if (a.raceName) {
+    c.races = { upcoming: [{ name: a.raceName, date: a.raceDate || '', detail: a.raceTarget ? `目标 ${a.raceTarget}` : '', tag: 'A race', accent: 'trail', anchor: 'races' }] };
+    c.trail = { ...c.trail, race: { name: a.raceName, date: a.raceDate || '', distance: 0, elevation: 0 }, verdict: '' };
+  }
+  if (a.age) c.physio = { ...c.physio, age: a.age };
+}
+applyConfig(curated);
+
 // ---------- Assemble ----------
 const recovery = parseRecovery();
 const strength = parseStrength();
@@ -554,7 +577,7 @@ const data = {
     acwr: load.acwr != null
       ? { value: load.acwr, date: load.days.at(-1)?.date ?? '', source: 'model' }
       : latestACWR ? { value: latestACWR.acwr, date: latestACWR.date, source: 'garmin' } : { value: 1.0, date: '' },
-    vo2max: latestVO2 ? { value: latestVO2.vo2, date: latestVO2.date } : { value: 52, date: '' },
+    vo2max: latestVO2 ? { value: latestVO2.vo2, date: latestVO2.date } : { value: '—', date: '' },
     balStreak: latestBal ? { value: latestBal.balStreak, date: latestBal.date } : { value: 0, date: '' },
     currentWeekKm: weeks.at(-1)?.runKm ?? 0,
     currentWeekLabel: weeks.at(-1)?.week ?? '',

@@ -119,11 +119,11 @@ Finish with one line, nothing else:
 **Step 2 — Recovery, last 28 days** (the expensive part)
 - garmin: per day `get_sleep_summary(d)` (score, hours, `avg_overnight_hrv`) + `get_heart_rates_summary(d)` (RHR); once `get_body_battery(today−28, today)`.
 - coros: per day `get_sleep_data(d)` + `get_daily_metrics(d)`. whoop: `get_calendar` over 28 days — one call. apple: from the files.
-- Once each, if the source has it: `get_training_status(today)` (VO2max, ACWR), `get_race_predictions`, `get_gear(include_stats=true)`.
+- Once each, if the source has it: `get_training_status(today)` (VO2max, ACWR) — **if today errors or is empty, call it for yesterday** (the watch often hasn't synced today yet; same for today's sleep row: skip it), `get_race_predictions`, `get_gear(include_stats=true)`.
 - A day with no sleep record is skipped, not filled in.
 
 **Step 3 — Write the data** (this is what makes the baseline and the dashboard work)
-1. Athlete Bio Data daily table: one row per day from Step 2, oldest first, the table's 7 columns, note `imported`.
+1. Athlete Bio Data daily table: one row per day from Step 2, oldest first, the table's 7 columns, note `imported`. On the **newest** row append `VO2max N` and `ACWR N` from `get_training_status` (the dashboard reads them from the note).
 2. One weekly log per ISO week covered by Step 1, in the **Weekly log format** below — Daily Summary rows only, no day sections, no future rows.
 3. Coach Memory → replace the `## Baselines` section with the computed numbers: HRV μ / SD / normal band (μ ± 0.5×SD) / roll7 · RHR mean and band · sleep score typical range · VO2max · `Baseline built from import on <date>`.
 4. config.json → add `"onboarded": "<today>"`.
@@ -138,7 +138,7 @@ Finish with one line, nothing else:
 - `wearable: none`: skip Steps 1–3; ask ten questions instead (weekly km, longest run, last race and time, sleep hours, injuries, strength history…) and write the assessment from the answers.
 
 **Step 5 — Dashboard**
-- Run `npm run dashboard` in the `claude-fitness-cn` folder **in the background** (builds `data.json` from the files above and serves it locally). Quote the local URL it prints and say the charts show the imported weeks. Vercel deployment is optional and in the README — don't start it unless asked.
+- Run `npm run dashboard` in the `claude-fitness-cn` folder **in the background** (builds `data.json` from the files above and serves it locally). Quote the local URL it prints and say the charts show the imported weeks. The page has a front-end gate: the passcode is `changeme` (change it at the top of `dashboard/public/index.html`). Sections that don't apply to the athlete (trail, Hyrox) still show example data until they edit `curated` in `dashboard/scripts/build-data.mjs` — say so in one line. Vercel deployment is optional and in the README — don't start it unless asked.
 
 Finish with exactly three lines: what the assessment found · what changed in the plan · "Tomorrow morning: `/fitness-coach morning`."
 

@@ -436,11 +436,14 @@ function renderHero(d) {
     <div class="hero">
       <span class="tag">A 赛 · 当前焦点</span>
       <h2>${r.name}</h2>
-      <div class="detail">${r.distance}km · ${r.elevation}m 爬升 · 体感跑，不追成绩</div>
+      <div class="detail">${r.elevation ? `${r.distance}km · ${r.elevation}m 爬升 · 体感跑，不追成绩` : (d.races.upcoming[0]?.detail || '')}</div>
       <div class="count"><span class="num">${days}</span><span class="lbl">天后开赛<br>${r.date}</span></div>
       <div class="stats">
+        ${r.elevation ? `
         <div class="s"><div class="v">${d.trail.longest.distance}km</div><div class="k">最长越野（${d.trail.longest.date.slice(5)}）</div></div>
-        <div class="s"><div class="v">${d.trail.longest.elevation}m</div><div class="k">最高单次爬升（${Math.round(d.trail.longest.elevation / d.trail.race.elevation * 100)}% 比赛爬升）</div></div>
+        <div class="s"><div class="v">${d.trail.longest.elevation}m</div><div class="k">最高单次爬升（${Math.round(d.trail.longest.elevation / d.trail.race.elevation * 100)}% 比赛爬升）</div></div>` : `
+        <div class="s"><div class="v">${Math.max(0, ...d.keyWorkouts.map(k => k.distKm)).toFixed(1)}km</div><div class="k">最长单次</div></div>
+        <div class="s"><div class="v">${d.kpi.currentWeekKm}km</div><div class="k">本周跑量</div></div>`}
         <div class="s"><div class="v">${d.kpi.vo2max.value}</div><div class="k">VO2max</div></div>
         <div class="s"><div class="v">${d.kpi.acwr.value}</div><div class="k">ACWR（OPTIMAL）</div></div>
       </div>
