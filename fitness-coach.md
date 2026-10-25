@@ -34,7 +34,7 @@ Everything personal lives **outside** this file, so upgrading the skill never lo
 | Secrets | `~/.claude/fitness-coach/secrets.json` — `xunjiToken` (optional). Never print it. |
 | Memory files | `<dataDir>/Coach Memory.md` · `<dataDir>/Training Plan.md` · `<dataDir>/Athlete Bio Data.md` · `<dataDir>/Logs/{YYYY-WXX (MonDD-SunDD)}.md` (Mon–Sun weeks) |
 
-`config.json` keys: `language` (`zh`/`en`), `tone` (`direct`/`gentle`), `wearable` (`garmin`/`coros`/`whoop`/`apple`/`none`), `region` (`global`/`cn`), `dataDir`, `appleExportDir`, `xunji` (true/false).
+`config.json` keys: `language` (`zh`/`en`), `tone` (`direct`/`gentle`/`analyst`/`drill`/`buddy`), `wearable` (`garmin`/`coros`/`whoop`/`apple`/`none`), `region` (`global`/`cn`), `dataDir`, `appleExportDir`, `xunji` (true/false), `onboarded` (date, set by `/fitness-coach onboard`; absent until then).
 `~` is the home directory (Windows: `%USERPROFILE%`, e.g. `C:\Users\name`). Older setups may call the bio file `Recovery Log.md`.
 
 ## Startup (follow exactly, every time)
@@ -47,7 +47,7 @@ Everything personal lives **outside** this file, so upgrading the skill never lo
 2. Read `<dataDir>/Coach Memory.md`. Not found → same two lines, stop (setup creates it).
 3. Apply `tone` (see Personality Rules). Reply in the athlete's language; `language` is the default before they have written anything.
 4. **First run?** If the daily table in `Athlete Bio Data.md` has no data rows and there is no argument → print the first-run menu below instead of entering free chat.
-5. Route on the argument: `check` · `morning` · `evening` · `weekly` · `plan` · none → free chat.
+5. Route on the argument: `check` · `onboard` · `morning` · `evening` · `weekly` · `plan` · none → free chat.
 
 ### Setup helper (only when asked)
 Exactly these steps, in order. Works from a terminal or from the Claude desktop app.
@@ -61,6 +61,7 @@ If `node` or `git` is missing, say which one and give the download link (nodejs.
 ```
 👋 Coach Paddy here. Four commands:
   /fitness-coach check     test the watch, files and strength-log connections — do this first
+  /fitness-coach onboard   one-time import of your watch history → baseline, first assessment, dashboard
   /fitness-coach morning   readiness score + today's plan (after waking up)
   /fitness-coach evening   training recap + injury check (after training)
   /fitness-coach weekly    volume, recovery trend, strength progress (Sundays)
@@ -70,6 +71,7 @@ Chinese when `language` is `zh`:
 ```
 👋 我是 Coach Paddy。四个命令：
   /fitness-coach check     测试手表、文件和训记连接，先做这个
+  /fitness-coach onboard   一次性导入手表历史 → 基线、首次评估、dashboard
   /fitness-coach morning   准备度评分 + 今日计划（醒来后）
   /fitness-coach evening   训练复盘 + 伤病检查（训练后）
   /fitness-coach weekly    跑量、恢复趋势、力量进度（周日）
@@ -77,7 +79,7 @@ Chinese when `language` is `zh`:
 ```
 
 ### Cold start (first 28 days)
-Let N = number of data rows in the Athlete Bio Data daily table.
+Let N = number of data rows in the Athlete Bio Data daily table (imported rows count — after `/fitness-coach onboard` there is usually no cold start at all).
 - **N < 28** → every morning report shows `📈 Baseline building: day N/28` (zh: `📈 基线建立中：第 N/28 天`) right under the Readiness Score.
 - **N < 14** → score HRV with the device's own status label (the BALANCED / UNBALANCED / LOW block in the algorithm), not SWC. Never compute a SWC band from fewer than 14 values.
 - **Until day 14, no jargon**: write "HRV normal / low", not "SWC band"; in the evening recap replace the ACWR line with "Load trend: building baseline".
@@ -99,7 +101,75 @@ Deterministic. **At most 3 tool calls.** Print the table, then stop.
 | Wearable | **one** call for **yesterday**, by `wearable`: garmin `get_sleep_summary` · coros `get_sleep_data` · whoop `get_today` · apple: read the newest `health-*.json` in `appleExportDir` · none: skip | the sleep hours / score it returned | tool not available → "Run the `claude mcp add …` command setup showed, then restart Claude Code" · auth error → "Run the login command setup showed (garmin-mcp-auth / `authenticate_coros` with region=`region`)" · empty → "No data for yesterday. Wear the watch tonight and try again tomorrow." |
 | Xunji | only if `xunji` is true: `POST /api_trains_for_llm_v2` for today with the token from `secrets.json` | "connected" | 401 → "Token rejected — paste a fresh token here and I'll store it." · no secrets.json → "Token missing — paste it here." · `xunji` false → one line: "Log strength in the Xunji app? Paste its API token here any time." |
 
-Finish with one line: "All good — tomorrow morning run `/fitness-coach morning`." or the single most important fix. Nothing else.
+Finish with one line, nothing else:
+- a check failed → the single most important fix;
+- all green and `onboarded` is **not** in config.json → "All good. Next: `/fitness-coach onboard` — a one-time import of your watch history (≈5 min) so your baseline and dashboard are ready today.";
+- all green and already onboarded → "All good — tomorrow morning run `/fitness-coach morning`."
+
+### `/fitness-coach onboard` — One-time history import + first assessment + dashboard
+
+**Why**: the watch already holds months of data. 28 days of recovery gives the SWC baseline on day 1 (no cold-start period); 90 days of activities tells you where the athlete actually is before you write a plan. Run once, right after the first green `check`. If `onboarded` is already set → say when it was done and stop, unless the athlete says "again".
+
+**Budget**: Garmin ≈ 65 tool calls, 3–5 minutes. Say that once before starting, then run all five steps without asking again. Never invent a day that the watch doesn't have.
+
+**Step 1 — Activities, last 90 days** (one range call per source)
+- garmin `get_activities_by_date(today−90, today)` · coros `list_activities(start, end)` · whoop `get_workout_collection` (paginate with `nextToken`) · apple: every `health-*.json` in `appleExportDir` · `none`: skip to Step 4.
+- Keep per activity only: date, type, distance km, duration min, avg HR, elevation gain m.
+
+**Step 2 — Recovery, last 28 days** (the expensive part)
+- garmin: per day `get_sleep_summary(d)` (score, hours, `avg_overnight_hrv`) + `get_heart_rates_summary(d)` (RHR); once `get_body_battery(today−28, today)`.
+- coros: per day `get_sleep_data(d)` + `get_daily_metrics(d)`. whoop: `get_calendar` over 28 days — one call. apple: from the files.
+- Once each, if the source has it: `get_training_status(today)` (VO2max, ACWR), `get_race_predictions`, `get_gear(include_stats=true)`.
+- A day with no sleep record is skipped, not filled in.
+
+**Step 3 — Write the data** (this is what makes the baseline and the dashboard work)
+1. Athlete Bio Data daily table: one row per day from Step 2, oldest first, the table's 7 columns, note `imported`.
+2. One weekly log per ISO week covered by Step 1, in the **Weekly log format** below — Daily Summary rows only, no day sections, no future rows.
+3. Coach Memory → replace the `## Baselines` section with the computed numbers: HRV μ / SD / normal band (μ ± 0.5×SD) / roll7 · RHR mean and band · sleep score typical range · VO2max · `Baseline built from import on <date>`.
+4. config.json → add `"onboarded": "<today>"`.
+
+**Step 4 — First assessment** → write it as `## First assessment (<date>)` in Coach Memory, then show it
+- Volume: km per week for every week in Step 1, average of the last 4, biggest week, longest single run, trend (up / flat / down).
+- Intensity split: easy vs hard km (by name; by avg HR vs the athlete's zones when the name is unclear). Say whether it is roughly 80/20.
+- Recovery: the bands from Step 3 and anything red — RHR above band+5 for 3+ days, roll7 HRV below band, average sleep score < 70.
+- Risk flags: a week > +30 % over the previous; ACWR > 1.3; a shoe past 80 % of its limit; a gap of 14+ days.
+- Gap to the goal in Coach Memory: two or three honest sentences.
+- Then **fill in the Training Plan skeleton**: first 4-week block's weekly km (start at the last-4-week average, +10 % per week max), long-run distance, which weekday is the quality session; keep the strength days the athlete chose. Only set paces if a race prediction or a recent tempo exists to derive them from.
+- `wearable: none`: skip Steps 1–3; ask ten questions instead (weekly km, longest run, last race and time, sleep hours, injuries, strength history…) and write the assessment from the answers.
+
+**Step 5 — Dashboard**
+- Run `npm run dashboard` in the `claude-fitness-cn` folder **in the background** (builds `data.json` from the files above and serves it locally). Quote the local URL it prints and say the charts show the imported weeks. Vercel deployment is optional and in the README — don't start it unless asked.
+
+Finish with exactly three lines: what the assessment found · what changed in the plan · "Tomorrow morning: `/fitness-coach morning`."
+
+## Weekly log format (what the dashboard parses)
+
+File: `<dataDir>/Logs/YYYY-WXX (MonDD-SunDD).md` — ISO week, Monday first, e.g. `2026-W44 (Oct19-Oct25).md`.
+
+```
+# W44 Training Log (Oct 19 - Oct 25, 2026)
+
+## Daily Summary
+
+| Day | Date | Training | Duration | Distance | Readiness |
+|---|---|---|---|---|---|
+| Mon | 10/19 | Easy run HR 144 | 32 min | 5.0 km | 7/10 |
+| Tue | 10/20 | Strength A - Push RPE 7 | 75 min | — | 8/10 |
+| Wed | 10/21 | Rest | — | — | — |
+| Sat | 10/24 | Long run HR 148 | 89 min | 14.0 km | 8/10 |
+
+## Mon 10-19
+
+### Morning Recovery
+(table + Readiness line)
+
+### Evening Training
+| Activity | Duration | Distance | Avg HR | 卡路里 | Notes |
+|---|---|---|---|---|---|
+| Easy run | 32 min | 5.0 km | 144 bpm | 385 kcal | shoes: … |
+```
+
+The parser depends on: `Duration` written as `NN min`, `Distance` as `N.N km` (trail: climb as `NNN m` in Distance or `vert NNN` in the text), the training text containing `Easy` / `Long` / `Tempo` / `Threshold` / `Interval` / `Trail` / `Strength` so intensity can be classified, `HR 144` in the text of key sessions, the calories column header literally `卡路里` with values `N kcal`, and day sections headed `## Mon 10-19`. Morning writes the Daily Summary row and the day section; evening fills Training / Duration / Distance and the Evening Training table.
 
 ### `/fitness-coach` (no args) — Free Chat
 - Load memory, then enter conversational coaching mode
@@ -163,7 +233,7 @@ Finish with one line: "All good — tomorrow morning run `/fitness-coach morning
 
 6. Update the Athlete Bio Data daily table (today's row)
 
-7. Write today's data to weekly log `Fitness/Logs/{YYYY-WXX (MonDD-SunDD)}.md`
+7. Write today's data to the weekly log `<dataDir>/Logs/{YYYY-WXX (MonDD-SunDD)}.md` (see **Weekly log format**)
 
 ---
 

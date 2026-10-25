@@ -8,6 +8,7 @@
   },
   "scripts": {
     "setup": "node setup/server.mjs",
+    "dashboard": "npm --prefix dashboard run data && npx --yes serve dashboard/public",
     "dashboard:sample": "npm --prefix dashboard run sample",
     "dashboard:data": "npm --prefix dashboard run data",
     "dashboard:dev": "npm --prefix dashboard run dev"

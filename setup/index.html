@@ -200,7 +200,8 @@ const I18N = {
     's5.h': 'Installed ✅', 's5.next': 'Next steps', 's5.files': 'Files written / kept',
     'mcp.h': 'One command left. Run it in a terminal, or paste it to Claude in the desktop app and ask it to run it:', 'mcp.auth': 'Then log in to your watch account once:', 'mcp.copy': 'Copy', 'mcp.copied': 'Copied',
     'n1': 'Run the command above (it connects your watch to Claude Code), then restart Claude Code.', 'n2': 'Open Claude Code — <code>claude</code> in a terminal, or the Code tab in the Claude desktop app.', 'n3': 'Type <code>/fitness-coach check</code> — the coach tests every connection and tells you what to fix.',
-    'n4': 'Tomorrow morning: <code>/fitness-coach morning</code>. After training: <code>/fitness-coach evening</code>.', 'n5': 'The first 28 days build your personal baseline; reports say so until then.',
+    'n3b': 'Then <code>/fitness-coach onboard</code> — a one-time import of your watch history (≈5 min): your baseline, a first assessment, a filled-in plan and the dashboard, all on day one.',
+    'n4': 'Tomorrow morning: <code>/fitness-coach morning</code>. After training: <code>/fitness-coach evening</code>.', 'n5': 'No watch, or skipped onboard? The first 28 days build your baseline; reports say so until then.',
     'err.wearable': 'Pick a watch (or "No watch").', 'err.dataDir': 'Data folder is required.', 'err.apple': 'Apple Watch needs the export folder.',
     'rv.lang': 'Language', 'rv.tone': 'Tone', 'rv.wearable': 'Wearable', 'rv.region': 'Region', 'rv.data': 'Data folder', 'rv.xunji': 'Xunji token', 'rv.yes': 'provided', 'rv.no': 'none', 'rv.plan': 'Weekly skeleton', 'rv.days': 'run days · strength days',
     kept: 'kept (already existed)',
@@ -234,7 +235,8 @@ const I18N = {
     's5.h': '安装完成 ✅', 's5.next': '接下来', 's5.files': '写入 / 保留的文件',
     'mcp.h': '还剩一条命令。在终端运行，或者贴给桌面 App 里的 Claude 让它帮你运行：', 'mcp.auth': '然后登录一次手表账号：', 'mcp.copy': '复制', 'mcp.copied': '已复制',
     'n1': '运行上面的命令（把手表接到 Claude Code），然后重启 Claude Code。', 'n2': '打开 Claude Code：终端输入 <code>claude</code>，或者用 Claude 桌面 App 的 Code 标签页。', 'n3': '输入 <code>/fitness-coach check</code>，教练会测试每个连接并告诉你要修什么。',
-    'n4': '明天早上：<code>/fitness-coach morning</code>。训练后：<code>/fitness-coach evening</code>。', 'n5': '前 28 天在建立你的个人基线，报告里会标注。',
+    'n3b': '再输入 <code>/fitness-coach onboard</code>：一次性导入手表历史（约 5 分钟），第一天就有基线、首次评估、填好的计划和 dashboard。',
+    'n4': '明天早上：<code>/fitness-coach morning</code>。训练后：<code>/fitness-coach evening</code>。', 'n5': '没有手表或跳过了 onboard？前 28 天在建立基线，报告里会标注。',
     'err.wearable': '请选一块表（或「没有手表」）。', 'err.dataDir': '数据文件夹必填。', 'err.apple': 'Apple Watch 需要填导出文件夹。',
     'rv.lang': '语言', 'rv.tone': '风格', 'rv.wearable': '设备', 'rv.region': '区域', 'rv.data': '数据文件夹', 'rv.xunji': '训记 token', 'rv.yes': '已填', 'rv.no': '无', 'rv.plan': '周结构', 'rv.days': '跑步天 · 力量天',
     kept: '保留（已存在）',
@@ -335,7 +337,7 @@ function renderDone(r) {
   if (r.commands.auth) html += cmdBlock(t('mcp.auth'), r.commands.auth);
   if (r.commands.note) html += `<p class="hint">${r.commands.note}</p>`;
   $('#mcpBlock').innerHTML = html;
-  const steps = [r.commands.add ? 'n1' : null, 'n2', 'n3', 'n4', 'n5'].filter(Boolean);
+  const steps = [r.commands.add ? 'n1' : null, 'n2', 'n3', 'n3b', 'n4', 'n5'].filter(Boolean);
   $('#nextSteps').innerHTML = steps.map((k) => `<li>${t(k)}</li>`).join('');
   $('#files').innerHTML = r.written.map((p) => `<li>${p}</li>`).join('') + r.skipped.map((p) => `<li>${p} — ${t('kept')}</li>`).join('');
 }

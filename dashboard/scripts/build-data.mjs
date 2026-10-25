@@ -49,7 +49,7 @@ function bioDataPath() {
 
 function parseRecovery() {
   const raw = readFileSync(bioDataPath(), 'utf8');
-  const daily = raw.split('## 每日更新')[1] ?? '';
+  const daily = raw.split(/^## (?:每日更新|Daily Updates)/m)[1] ?? '';
   const rows = [];
   for (const line of daily.split('\n')) {
     const m = line.match(/^\|\s*(\d{4}-\d{2}-\d{2})\s*\|/);

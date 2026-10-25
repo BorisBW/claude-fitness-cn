@@ -106,8 +106,18 @@ Run that command, start `claude` (or open the Code tab in the desktop app), and 
 ```
 
 The coach tests the watch connection, the files and the strength log, and tells you exactly what to
-fix if anything is off. Tomorrow morning: `/fitness-coach morning`. The first 28 days build your
-personal baseline, and every report says so until then.
+fix if anything is off. Then, once:
+
+```
+/fitness-coach onboard
+```
+
+This pulls your watch history — 90 days of activities, 28 days of sleep / HRV / resting HR — and
+turns it into your personal baseline (no 28-day cold start), a **first assessment** (volume trend,
+intensity split, recovery, risk flags, the gap to your goal), a filled-in first training block, and
+a **dashboard** served locally (`npm run dashboard`). About five minutes on Garmin. Tomorrow morning:
+`/fitness-coach morning`. Without a watch, the assessment comes from a short interview and the first
+28 days build the baseline instead.
 
 > **Installing with an AI agent?** Tell it: *clone the repo, run `npm run setup`, and relay the form
 > to me.* If it can't open a browser, the manual steps below do the same thing. Two rules it must not
@@ -255,6 +265,8 @@ The dashboard parses your Obsidian vault into a visual summary. To run it with y
 cd dashboard
 
 # Point at your vault's Fitness folder:
+node scripts/build-data.mjs                          # reads dataDir from ~/.claude/fitness-coach/config.json
+# or point it somewhere explicitly:
 FITNESS_DIR="/path/to/YourVault/Fitness" node scripts/build-data.mjs
 
 # Preview locally:
@@ -276,6 +288,7 @@ Your real `data.json` is git-ignored — the public deploy only ever shows synth
 | Command | When | What |
 |---|---|---|
 | `/fitness-coach check` | Right after setup | Tests the watch, files and strength-log connections; says what to fix |
+| `/fitness-coach onboard` | Once, after the first green check | Imports 90 days of activities + 28 days of recovery → baseline, first assessment, first plan block, dashboard |
 | `/fitness-coach` | Anytime | Free chat — training, nutrition, race strategy |
 | `/fitness-coach morning` | Wake up | Readiness Score + today's plan |
 | `/fitness-coach evening` | Post-training | Analysis + Race Confidence + injury check + logs to Obsidian (+ Xunji write-back for strength) |
@@ -364,7 +377,9 @@ npm run setup
 
 **不习惯用终端？** 在 Claude 桌面 App 里把 repo 链接贴给它，说「帮我安装教练」，Claude 会自己克隆、运行 `npm run setup`、打开表单。剩下那条 `claude mcp add …` 命令也可以直接贴回去让它运行。
 
-运行那条命令，启动 `claude`（或桌面 App 的 Code 标签页），输入 `/fitness-coach check`：教练会测试手表、文件和训记连接，哪里不通直接告诉你怎么修。第二天早上 `/fitness-coach morning`。前 28 天在建立你的个人基线，报告里会标注。
+运行那条命令，启动 `claude`（或桌面 App 的 Code 标签页），输入 `/fitness-coach check`：教练会测试手表、文件和训记连接，哪里不通直接告诉你怎么修。
+
+然后输入一次 `/fitness-coach onboard`：教练把手表里的历史拉回来（90 天活动、28 天睡眠 / HRV / 静息心率），直接算出你的个人基线（不用等 28 天），写一份**首次评估**（跑量趋势、强度分布、恢复状况、风险点、和目标的差距），把第一个训练块填实，再把 **dashboard** 在本地开起来（`npm run dashboard`）。佳明大约 5 分钟。第二天早上 `/fitness-coach morning`。没有手表的话，评估改成一轮问答，基线靠前 28 天建立。
 
 **让 AI agent 装？** 跟它说：克隆 repo，运行 `npm run setup`，把表单转述给我填。打不开浏览器的话，英文部分的 Manual setup 是同样的步骤。两条不能搞错：`fitness-coach.md` 永远要装；`apple-watch-fitness-coach.md` 只给 Apple Watch 用户加装，不是替代。
 
