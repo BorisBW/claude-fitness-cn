@@ -64,15 +64,15 @@ You own the data, it's diff-able in git, and it's portable. Templates are in [`e
 
 ## Mobile dashboard (deploy to Vercel)
 
-The [`dashboard/`](dashboard/) folder is a static single-page app that parses those same local files into a phone-friendly dashboard — race countdowns, Volume Load charts, recovery trends, a Hyrox station radar, trail-prep tracker, and more. Deploy it to Vercel and check your training from anywhere.
+The [`dashboard/`](dashboard/) folder is a static single-page app that parses those same local files into a phone-friendly dashboard. Its centrepiece is the **pulse ledger**: one row per week, every run drawn as a pulse, logged weeks running into the planned ones all the way to race day. Around it: macro cycle, races, running, strength, recovery, physiology, rehab and diet. Deploy it to Vercel and check your training from anywhere.
 
 ```bash
 cd dashboard
-npm run sample          # synthetic demo data
+npm run sample          # synthetic demo athlete (Road to Osaka)
 npx vercel deploy --prod
 ```
 
-Your real `data.json` is generated locally and git-ignored — the public deploy only ever shows synthetic sample data. See [`dashboard/README.md`](dashboard/README.md).
+Your real `data.json` is generated locally and git-ignored. Without it the page falls back to the synthetic demo athlete, so the public deploy never shows your data. See [`dashboard/README.md`](dashboard/README.md).
 
 ---
 
@@ -273,7 +273,7 @@ FITNESS_DIR="/path/to/YourVault/Fitness" node scripts/build-data.mjs
 npx serve public
 ```
 
-To customise the dashboard, edit the `curated` object in `build-data.mjs` — it holds your injuries, goals, PBs, race plans, diet targets, and physiology data. The parser functions above it are generic; `curated` is the part you personalise.
+Without further setup the dashboard uses your `npm run setup` answers (name, goal, race, injuries). For the full picture (macro cycle, weekly plan, PBs, physiology, diet targets) copy the shape of `EXAMPLE_CURATED` in `build-data.mjs` into `scripts/curated.local.mjs` (git-ignored) and `export default` it. Optional: `DASHBOARD_PASSCODE=...` in `dashboard/.env.local` adds a front-end passcode screen.
 
 To deploy with sample data (for demo / public sharing):
 ```bash
@@ -402,7 +402,7 @@ npm run setup
 
 ### 手机端 Dashboard
 
-`dashboard/` 是一个静态单页应用，把上述本地文件解析成手机友好的仪表盘（比赛倒计时、Volume Load 图表、恢复趋势、Hyrox 站点雷达、越野备赛追踪等），部署到 Vercel 随时随地查看。真实 `data.json` 本地生成且被 git 忽略，公开部署只展示合成示例数据。
+`dashboard/` 是一个静态单页应用，把上述本地文件解析成手机友好的仪表盘（核心是「脉冲周历」：每周一行、每次跑步一个脉冲，已练的周一路连到计划中的周、直到比赛日；另有大周期、比赛、跑步、力量、恢复、生理、康复、营养），部署到 Vercel 随时随地查看。真实 `data.json` 本地生成且被 git 忽略，公开部署只展示合成示例数据。
 
 ---
 

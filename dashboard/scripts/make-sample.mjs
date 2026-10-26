@@ -110,7 +110,7 @@ const body = {
   ],
 };
 
-// ---- 28 天合成饮食 (UTMB+Hyrox+马拉松三周期人设, 微信 ClawBot 采集的数据形态) ----
+// ---- 28 天合成饮食 (UTMB+Hyrox+大阪马拉松三周期人设, 微信 ClawBot 采集的数据形态) ----
 // 模板: [餐次, 时间, ...([名称, 类型, 份量, kcal, 蛋白g, 碳水g, 脂肪g] 元组)];
 // 每天由若干餐模板组成, 按训练类型(休息/力量/轻松跑/长跑/聚餐)循环 4 遍, 热量与宏量呈真实波动
 const T = {
@@ -255,23 +255,87 @@ const acute7 = load.days.slice(-7).reduce((s, d) => s + d.runLoad + d.strLoad, 0
 const chronic28 = load.days.reduce((s, d) => s + d.runLoad + d.strLoad, 0) / load.days.length;
 load.acwr = chronic28 > 0 ? Math.round(acute7 / chronic28 * 100) / 100 : null;
 
+
+// ---- Pulse dashboard: macro cycle, pulse ledger (one row per week, km per day), load mix, HR efficiency ----
+const TODAY = '2026-08-16';
+const DIST = [0, 0.18, 0.15, 0.2, 0, 0.33, 0.14];             // Tue easy · Wed easy · Thu tempo · Sat long · Sun recovery
+const spread = (km) => DIST.map((f) => r1(km * f));
+const monday = (iso, add) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + add * 7); return d.toISOString().slice(0, 10); };
+const PAST_KM = [40, 44, 46, 38, 48, 52, 58, 45, 60, 65, 68, 62, 64];              // 5/18 … 8/10 (last row = this week)
+const pulseRows = PAST_KM.map((km, i) => ({ mon: monday('2026-05-18', i), days: spread(km), kind: i === PAST_KM.length - 1 ? 'now' : 'actual', race: null }));
+// UTMB Chiang Mai (Sat 11/28) → recovery → Hyrox Paris (Sun 12/20) → Osaka block → Osaka (Sun 2/28)
+const PLAN = [
+  [66, 'plan'], [70, 'plan'], [56, 'plan'], [72, 'plan'], [76, 'plan'], [60, 'plan'], [80, 'plan'],
+  [82, 'est'], [66, 'est'], [84, 'est'], [70, 'est'], [56, 'est'], [44, 'est'], [20, 'est', 'UTMB', 5, 50],
+  [24, 'est'], [36, 'est'], [30, 'est', 'Hyrox', 6, 8], [40, 'est'], [52, 'est'], [60, 'est'], [66, 'est'],
+  [56, 'est'], [72, 'est'], [76, 'est'], [64, 'est'], [52, 'est'], [42, 'est'], [16, 'est', 'Osaka', 6, 42.2],
+];
+const weekPlan = PLAN.map(([km, kind, race, dayIdx, raceKm], i) => {
+  const days = spread(km);
+  if (race) { days[5] = 0; days[6] = 0; days[dayIdx] = raceKm; }
+  return { mon: monday('2026-08-17', i), kind, days, race: race || undefined };
+});
+weekPlan.forEach((w) => pulseRows.push({ mon: w.mon, days: w.days, kind: w.kind, race: w.race || null }));
+const ledgerPhases = [
+  { from: '2026-05-18', to: '2026-07-12', t: 'Base · 越野基础' },
+  { from: '2026-07-13', to: '2026-10-25', t: '爬升期 · UTMB 专项' },
+  { from: '2026-10-26', to: '2026-11-22', t: '减量' },
+  { from: '2026-11-23', to: '2026-11-29', t: 'UTMB 清迈 50K · 11/28', race: 'B' },
+  { from: '2026-11-30', to: '2026-12-20', t: '恢复 · Hyrox 巴黎 12/20' },
+  { from: '2026-12-21', to: '2027-02-07', t: '大阪专项' },
+  { from: '2027-02-08', to: '2027-02-21', t: '减量' },
+  { from: '2027-02-22', to: '2027-02-28', t: '大阪 42.2 · 2/28', race: 'A' },
+];
+const macro = {
+  name: 'Road to Osaka', start: '2026-06-15', race: '2027-02-28', target: '2:52', targetPace: '4:04/km', pb: '2:58:32',
+  phases: [
+    { n: 1, name: '越野基础', start: '2026-06-15', end: '2026-07-12', km: '45→60', long: '16→20' },
+    { n: 2, name: 'UTMB 专项', start: '2026-07-13', end: '2026-10-25', km: '60→84', long: '20→38 · 爬升' },
+    { n: 3, name: '减量 + UTMB', start: '2026-10-26', end: '2026-11-29', km: '56→比赛', long: '24 · 16', race: 'UTMB' },
+    { n: 4, name: '恢复 + Hyrox', start: '2026-11-30', end: '2026-12-20', km: '24→36', long: '—', race: 'Hyrox' },
+    { n: 5, name: '大阪专项', start: '2026-12-21', end: '2027-02-07', km: '40→76', long: '26→34', strength: 'Lower×1 maintenance + Upper A/B' },
+    { n: 6, name: '大阪减量', start: '2027-02-08', end: '2027-02-28', km: '52→比赛', long: '24 · 16', race: '大阪' },
+  ],
+  longRuns: [
+    { date: '2026-08-22', km: 24 }, { date: '2026-09-05', km: 28 }, { date: '2026-09-26', km: 32 }, { date: '2026-10-10', km: 38 },
+    { date: '2026-10-31', km: 24 }, { date: '2026-11-28', km: 50, race: 'UTMB' },
+    { date: '2027-01-09', km: 26 }, { date: '2027-01-23', km: 30, mp: 12 }, { date: '2027-02-06', km: 34, mp: 18 }, { date: '2027-02-20', km: 18, mp: 8 },
+    { date: '2027-02-28', km: 42.2, race: '大阪' },
+  ],
+  milestones: [
+    { date: '2026-09-05', label: 'Poles 首次上长距离', note: '爬升 900 m，练上坡省腿' },
+    { date: '2026-10-10', label: '最长越野 38 km', note: '比赛营养完整演练' },
+    { date: '2026-11-28', label: 'UTMB 清迈 50K', note: 'B 赛 · 体感跑' },
+    { date: '2026-12-20', label: 'Hyrox 巴黎', note: 'Open 组 · 不追成绩' },
+    { date: '2027-02-06', label: '全周期最长 34 km', note: '含 18 km 马配' },
+    { date: '2027-02-28', label: '大阪马拉松', note: 'A 赛 · 目标 2:52' },
+  ],
+  strategy: [
+    { race: 'UTMB 清迈 50K · B 赛', text: '按体感和心率跑，上坡用杖，下坡保护股四。每小时 60–80 g 碳水。' },
+    { race: '大阪 · A 赛', text: '前 30 km 稳在 4:04–4:06，30 km 后感觉好再提速；补给每 30 分钟一包胶。' },
+  ],
+};
+const weeklyMinutes = pulseRows.filter((r) => r.kind === 'actual' || r.kind === 'now').map((r, i) => ({ mon: r.mon, run: Math.round(r.days.reduce((a, b) => a + b, 0) * 5), str: [210, 190, 200, 140, 220, 210, 230, 150, 220, 210, 200, 190, 210][i] ?? 200 }));
+const effSeries = [1.28, 1.29, 1.27, 1.3, 1.31, 1.3, 1.32, 1.33, 1.31, 1.34, 1.35, 1.36].map((eff, i) => { const d = new Date('2026-06-01T00:00:00Z'); d.setUTCDate(d.getUTCDate() + i * 7); return { date: d.toISOString().slice(0, 10), eff, hr: 150, paceSec: Math.round(1000 / (eff * 150) * 60) }; });
+
 const data = {
-  generatedAt: new Date().toISOString(),
-  phase: 'Sample — UTMB + Hyrox + Marathon triple-block build (synthetic demo data, no real athlete)',
+  generatedAt: TODAY + 'T12:00:00.000Z',
+  athlete: { name: 'Demo Runner' },
+  phase: 'UTMB 专项期 · 爬升（7/13 – 10/25）',
   weeklyRunTarget: [55, 70],
   weight: { current: 66.5, asOf: '2026-08-15', target: '65-67kg' },
   dietTarget: DIET_TARGET,
   injuries: [
-    { name: 'Right Achilles tendinopathy', status: 'resolved', note: 'Cleared after 8-week eccentric loading block. Monitor under speed work.' },
+    { name: 'Right Achilles tendinopathy', status: 'resolved', note: 'Cleared after 8-week eccentric loading block. Monitor under speed work.', test: 'Single-leg hops 25/25' },
     { name: 'Hip flexor tightness (L)', status: 'treating', note: 'Post-Hyrox sled/lunge soreness. Daily couch stretch + hip CARs.' },
-    { name: 'Plantar fasciitis (L), mild', status: 'watching', note: 'AM stiffness only, pain-free running. Calf raises + frozen-bottle roll.' },
+    { name: 'Plantar fasciitis (L), mild', status: 'watching', note: 'AM stiffness only, pain-free running. Calf raises + frozen-bottle roll.', test: 'AM stiffness 2/10' },
   ],
   goals: {
-    firstPriority: ['Vertical durability + ultra fueling (UTMB)', 'Hyrox station-transfer strength', 'Marathon-specific aerobic base (London)', 'Injury-free across a 3-race season'],
+    firstPriority: ['Vertical durability + ultra fueling (UTMB)', 'Hyrox station-transfer strength', 'Marathon-specific aerobic base (Osaka)', 'Injury-free across a 3-race season'],
     performance: [
       { year: '2026', goal: 'UTMB Chiang Mai 50K (Nov 28) — first ultra finish, target sub-9:00' },
       { year: '2026', goal: 'Hyrox Paris (Dec 20) — sub-1:10 Open' },
-      { year: '2027', goal: 'London Marathon — sub-2:55 (current PB 2:58:32)' },
+      { year: '2027', goal: 'Osaka Marathon — sub-2:55 (current PB 2:58:32)' },
     ],
   },
   pbs: [
@@ -281,7 +345,8 @@ const data = {
     { dist: 'Marathon', time: '2:58:32', pace: '4:14/km', date: '2026-03-15', note: 'Sub-3 debut' },
   ],
   physio: {
-    lthr: 175, maxHr: '190-192',
+    height: 176, age: 33, lthr: 175, maxHr: '190-192', vo2max: 59,
+    predicted: { marathon: '2:53:40', half: '1:21:30', '10k': '36:10', '5k': '17:20' },
     hrZones: [
       { zone: 'Z1', bpm: '125-142', use: 'Recovery' }, { zone: 'Z2', bpm: '142-158', use: 'Easy / Long Run' },
       { zone: 'Z3', bpm: '158-168', use: 'Marathon pace' }, { zone: 'Z4', bpm: '168-182', use: 'Threshold' },
@@ -295,7 +360,7 @@ const data = {
     upcoming: [
       { name: 'UTMB Chiang Mai 50K', date: '2026-11-28', detail: '50km · 3600m gain · First 50K', tag: 'A race', accent: 'trail', anchor: 'trail' },
       { name: 'Hyrox Paris', date: '2026-12-20', detail: 'Open division · 8km run + 8 stations · 3wk after UTMB', tag: 'B race', accent: 'hyrox', anchor: 'hyrox' },
-      { name: 'London Marathon', date: '2027-04-25', detail: 'World Marathon Major · Target sub-2:55', tag: 'Season goal', accent: 'marathon', anchor: 'races' },
+      { name: 'Osaka Marathon', date: '2027-02-28', detail: 'Season goal · Target sub-2:55 · flat, fast course', tag: 'Season goal', accent: 'marathon', anchor: 'macro' },
     ],
   },
   trail: {
@@ -362,6 +427,8 @@ const data = {
     currentWeekKm: 62, currentWeekLabel: '2026-W33',
   },
   recovery, strength, weeklyRun, intensityDist, keyWorkouts, recentActivities, body, diet, load,
+  tdeeExpected: diet.tdeeExpected, macro, pulse: { rows: pulseRows, phases: ledgerPhases, today: TODAY },
+  weeklyMinutes, effSeries, weightLatest: body.weights.at(-1), passcode: null,
 };
 
 mkdirSync(OUT_DIR, { recursive: true });

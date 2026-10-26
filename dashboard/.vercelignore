@@ -1,0 +1,5 @@
+.claude
+.claude-launch-note
+README.md
+.env*
+public/export.html

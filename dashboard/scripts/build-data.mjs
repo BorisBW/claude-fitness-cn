@@ -2,8 +2,7 @@
 // Parse local Obsidian training files → public/data.json
 // 从本地 Obsidian 训练文件解析数据 → public/data.json
 //
-// Usage:  node scripts/build-data.mjs            (reads dataDir from ~/.claude/fitness-coach/config.json)
-//         FITNESS_DIR="/path/to/vault/Fitness" node scripts/build-data.mjs   (explicit override)
+// Usage:  node scripts/build-data.mjs   (vault path: FITNESS_DIR, scripts/curated.local.mjs, or `npm run setup` config)
 //
 // The PARSER functions below are generic — they read the markdown table
 // formats produced by the Coach Paddy skill (Athlete Bio Data / Training Plan /
@@ -13,22 +12,39 @@
 
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { homedir } from 'node:os';
 
-// Where the markdown files live: FITNESS_DIR env → dataDir from `npm run setup`'s config → placeholder.
-function configDataDir() {
-  try {
-    return JSON.parse(readFileSync(join(homedir(), '.claude', 'fitness-coach', 'config.json'), 'utf8')).dataDir || null;
-  } catch {
-    return null;
+const HERE = dirname(fileURLToPath(import.meta.url));
+// Personal data lives in scripts/curated.local.mjs (git-ignored); without it the example block below is used.
+const LOCAL_FILE = join(HERE, 'curated.local.mjs');
+const LOCAL = existsSync(LOCAL_FILE) ? (await import(pathToFileURL(LOCAL_FILE).href)).default : null;
+// Optional front-end passcode: DASHBOARD_PASSCODE env var or a line in .env.local / .env.
+function envFile(key) {
+  for (const f of ['.env.local', '.env']) {
+    const p = join(HERE, '..', f);
+    if (!existsSync(p)) continue;
+    const m = readFileSync(p, 'utf8').match(new RegExp('^' + key + '=(.*)$', 'm'));
+    if (m) return m[1].trim().replace(/^["']|["']$/g, '');
   }
+  return null;
 }
-const FITNESS_DIR = process.env.FITNESS_DIR || configDataDir() || '/path/to/your/Obsidian-vault/Fitness';
+// Point this at your Obsidian vault's Fitness folder (FITNESS_DIR env, or fitnessDir in curated.local.mjs).
+// `npm run setup` writes ~/.claude/fitness-coach/config.json (dataDir + athlete answers).
+function setupConfig() {
+  try { return JSON.parse(readFileSync(join(homedir(), '.claude', 'fitness-coach', 'config.json'), 'utf8')); } catch { return null; }
+}
+const SETUP = setupConfig();
+// Where the markdown files live: FITNESS_DIR env → curated.local.mjs → setup config → placeholder.
+const FITNESS_DIR = process.env.FITNESS_DIR || LOCAL?.fitnessDir || SETUP?.dataDir || '/path/to/your/vault/Fitness';
+if (!existsSync(FITNESS_DIR)) {
+  console.error(`No vault folder at ${FITNESS_DIR}.\nSet FITNESS_DIR, or fitnessDir in scripts/curated.local.mjs. To preview with demo data instead: npm run sample && npx serve public`);
+  process.exit(1);
+}
 // Diet log written by the WeChat food pipeline (food.mjs / food-live.mjs).
 // Point DIET_LOG at your food-log.jsonl, e.g. DIET_LOG=/path/to/weixin-test/food-log.jsonl
 const DIET_LOG = process.env.DIET_LOG || join(FITNESS_DIR, '..', '..', 'weixin-test', 'food-log.jsonl');
-const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
+const OUT_DIR = join(HERE, '..', 'public');
 
 const stripMd = (s) =>
   s.replace(/\*\*/g, '').replace(/[✅⚠️🔴🟡🟢🔥🎉🆕🔄⭐🏔️]/gu, '').trim();
@@ -49,7 +65,7 @@ function bioDataPath() {
 
 function parseRecovery() {
   const raw = readFileSync(bioDataPath(), 'utf8');
-  const daily = raw.split(/^## (?:每日更新|Daily Updates)/m)[1] ?? '';
+  const daily = (raw.split(/^## (?:每日更新|Daily Updates)/m)[1] ?? '').split('\n## ')[0];
   const rows = [];
   for (const line of daily.split('\n')) {
     const m = line.match(/^\|\s*(\d{4}-\d{2}-\d{2})\s*\|/);
@@ -71,7 +87,8 @@ function parseRecovery() {
       balStreak: balMatch ? parseInt(balMatch[1]) : null,
     });
   }
-  return rows;
+  const byDate = new Map(rows.map((r) => [r.date, r]));
+  return [...byDate.values()].sort((x, y) => x.date.localeCompare(y.date));
 }
 
 // ---------- 2. Training Plan: strength progress + Volume Load history ----------
@@ -113,99 +130,123 @@ function parseStrength() {
 }
 
 // ---------- 3. Weekly Logs: run volume + recent activities ----------
+// Header-driven: the Daily Summary table has changed shape many times
+// (Activity|Distance… / Training|Duration|Distance… / Training|Sleep|HRV…),
+// so columns are located by name and km/min are pulled from the text when
+// there is no dedicated column. Rows are de-duplicated by date across files.
+const pad2 = (n) => String(n).padStart(2, '0');
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function isoWeek(d) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
+  return `${x.getUTCFullYear()}-W${pad2(Math.ceil(((x - y0) / 864e5 + 1) / 7))}`;
+}
+function mondayOf(d) { const m = new Date(d); m.setHours(0, 0, 0, 0); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; }
+const stripParens = (s) => s.replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '');
+const RUN_RE = /半马|全马|马拉松|🏁|Easy|跑|Run|长距离|LSD|Long|节奏|间歇|Tempo|Threshold|Interval|VO2|马配|越野|Trail|Jog|Recovery|恢复/i;
+function splitChunks(text) {
+  // "Upper A 74min/… RPE 6 + Easy 5.0km/31.8min/…" → two activities
+  return stripParens(text).split(/\s\+\s|＋/).map((c) => c.trim()).filter(Boolean);
+}
 function parseWeeklyLogs() {
   const logsDir = join(FITNESS_DIR, 'Logs');
   const files = readdirSync(logsDir).filter((f) => f.endsWith('.md')).sort();
-  const weeks = [];
-  const allActs = [];
-  const keyWorkouts = [];
-  const easyByWeek = {}, hardByWeek = {};
-  const watchKcalByDate = new Map();
+  const byDate = new Map();
   const today = new Date();
   for (const f of files) {
     const raw = readFileSync(join(logsDir, f), 'utf8');
-    const label = f.match(/(\d{4}-W\d+)/)?.[1] ?? f;
-    const year = parseInt(label.slice(0, 4));
-    const range = f.match(/\((.+)\)/)?.[1] ?? '';
-    let km = 0, weekVert = 0;
+    const year = parseInt(f.slice(0, 4));
     const summary = raw.split('## Daily Summary')[1]?.split('\n## ')[0] ?? '';
-    const isNewFormat = summary.includes('| Training |');
+    let cols = null;
     for (const line of summary.split('\n')) {
-      if (!line.startsWith('|') || line.includes('---') || line.includes('| Day |')) continue;
-      const cells = line.split('|').map((c) => stripMd(c));
-      if (cells.length < 7) continue;
-      const dm = cells[2]?.match(/^(\d+)\/(\d+)$/);
-      if (dm) {
-        const rowDate = new Date(year, parseInt(dm[1]) - 1, parseInt(dm[2]));
-        if (rowDate > today) continue; // skip future planned rows
-      }
-      const distCell = [cells[5], cells[4]].find((c) => /^[~≈]?[\d.]+\s*km$/.test(c ?? ''));
-      if (distCell) km += parseFloat(distCell.replace(/[~≈km\s]/g, ''));
-      // 爬升(vert): 从距离列或训练文本里取 '爬升 1800m' / 'vert 1800' / '1800m' 形态, 没有则 0
-      const vertM = (() => {
-        const cell = [cells[5], cells[4]].find((c) => /^[~≈]?[\d.]+\s*m$/.test(c ?? ''));
-        if (cell) return parseFloat(cell.replace(/[~≈m\s]/g, ''));
-        const t = cells[3] ?? '';
-        const mt = t.match(/爬升\s*([\d.]+)\s*m|vert\s*([\d.]+)/i);
-        return mt ? parseFloat(mt[1] || mt[2]) : 0;
-      })();
-      weekVert += vertM;
-      if (isNewFormat && cells[3] && cells[3] !== '—' && cells[3] !== '休息') {
-        const act = { week: label, day: cells[1], date: cells[2], training: cells[3], duration: cells[4], distance: cells[5], readiness: cells[6] };
-        allActs.push(act);
-        // 强度分布(80/20): 按训练标签关键词分 轻松(Zone1-2) vs 高强度(Zone3+)
-        const t = cells[3];
-        const isHard = /节奏|Tempo|Threshold|阈值|间歇|Interval|VO2|变速|Fartlek/i.test(t);
-        const isEasy = /轻松|Easy|恢复|Recovery|长跑|Long|越野|Trail|慢跑|Jog/i.test(t);
-        const rKm = distCell ? parseFloat(distCell.replace(/[~≈km\s]/g, '')) : 0;
-        if (rKm > 0) {
-          if (isHard) hardByWeek[label] = (hardByWeek[label] || 0) + rKm;
-          else if (isEasy) easyByWeek[label] = (easyByWeek[label] || 0) + rKm;
-        }
-        // 关键训练配速趋势: 长跑/节奏/间歇 + 距离+时长可解析 → paceSec; HR 从训练文本取(Garmin), 没有则 null
-        if (/长跑|Long|节奏|Tempo|间歇|Interval|VO2|阈值|Threshold/i.test(t)) {
-          const kmM = /^[~≈]?([\d.]+)\s*km$/i.exec(cells[5]);
-          const minM = /^[~≈]?([\d.]+)\s*min$/i.exec(cells[4]);
-          if (kmM && minM) {
-            const hrM = t.match(/HR\s*(\d+)|心率\s*(\d+)|avg\s*(\d+)/i);
-            keyWorkouts.push({
-              week: label, date: cells[2],
-              type: /Interval|间歇|VO2/i.test(t) ? 'Interval' : /Tempo|节奏|阈值|Threshold/i.test(t) ? 'Tempo' : 'Long Run',
-              distKm: parseFloat(kmM[1]),
-              paceSec: Math.round(parseFloat(minM[1]) * 60 / parseFloat(kmM[1])),
-              hr: hrM ? parseInt(hrM[1] || hrM[2]) : null,
-            });
-          }
-        }
-      }
+      if (!line.startsWith('|') || /^\|[\s|:-]+$/.test(line)) continue;
+      const cells = line.split('|').slice(1, -1).map((c) => stripMd(c));
+      if (/^(Day|日)$/i.test(cells[0])) { cols = cells.map((c) => c.toLowerCase()); continue; }
+      if (!cols) continue;
+      const col = (...names) => { const i = cols.findIndex((c) => names.includes(c)); return i >= 0 ? cells[i] ?? '' : ''; };
+      const dm = col('date', '日期').match(/(\d{1,2})[\/-](\d{1,2})/);
+      if (!dm) continue;
+      const date = new Date(year, parseInt(dm[1]) - 1, parseInt(dm[2]));
+      if (date > today) continue;
+      const training = col('training', 'activity', 'type', '训练');
+      if (!training || training === '—' || /^休息$/.test(training)) continue;
+      const iso = `${year}-${pad2(dm[1])}-${pad2(dm[2])}`;
+      byDate.set(iso, {
+        iso, date, label: f.match(/(\d{4}-W\d+)/)?.[1], day: cells[0], md: `${parseInt(dm[1])}/${parseInt(dm[2])}`, training,
+        distCol: col('distance', '跑量'), durCol: col('duration'), readiness: col('readiness'),
+      });
     }
-    // Parse Evening Training sections for actual watch calories (卡路里 column)
-    const daySections = raw.split(/^## /m).slice(1);
-    for (const section of daySections) {
-      const dayMatch = section.split('\n')[0].match(/(\d{1,2})-(\d{1,2})/);
-      if (!dayMatch) continue;
-      const dayIso = `${year}-${dayMatch[1].padStart(2, '0')}-${dayMatch[2].padStart(2, '0')}`;
-      const etMatch = section.match(/### Evening Training[^\n]*/);
-      if (!etMatch) continue;
-      const etBlock = section.slice(section.indexOf(etMatch[0])).split(/^### /m)[0];
-      const tableLines = etBlock.split('\n').filter(l => l.startsWith('|'));
-      if (tableLines.length < 3) continue;
-      const headerCells = tableLines[0].split('|').map(c => c.trim());
-      const kcalIdx = headerCells.findIndex(c => c.includes('卡路里'));
-      if (kcalIdx < 0) continue;
-      let dayKcal = 0;
-      for (const tl of tableLines.slice(1)) {
-        if (tl.includes('---')) continue;
-        const cells = tl.split('|').map(c => c.trim());
-        const km = (cells[kcalIdx] ?? '').match(/(\d+)\s*kcal/i);
-        if (km) dayKcal += parseInt(km[1]);
-      }
-      if (dayKcal > 0) watchKcalByDate.set(dayIso, (watchKcalByDate.get(dayIso) || 0) + dayKcal);
-    }
-    weeks.push({ week: label, range, runKm: Math.round(km * 100) / 100, vert: Math.round(weekVert),
-      intensity: { easyKm: Math.round((easyByWeek[label] || 0) * 10) / 10, hardKm: Math.round((hardByWeek[label] || 0) * 10) / 10 } });
   }
-  return { weeks, activities: allActs, recentActivities: allActs.slice(-14), keyWorkouts, watchKcalByDate };
+  const rows = [...byDate.values()].sort((a, b) => a.iso.localeCompare(b.iso));
+  const allActs = [], keyWorkouts = [], watchKcalByDate = new Map();
+  const dailyKm = new Map(), dailyMin = new Map(), effSeries = [];
+  const weekMap = new Map();
+  for (const r of rows) {
+    const week = r.label || isoWeek(r.date);
+    const w = weekMap.get(week) || { km: 0, easy: 0, hard: 0, vert: 0, mon: mondayOf(r.date) };
+    const chunks = splitChunks(r.training);
+    let dayKm = 0;
+    for (const c of chunks) {
+      const kmM = c.match(/([\d.]+)\s*km(?!\/h)/i);
+      const minM = c.match(/([\d.]+)\s*min/i);
+      const isRun = RUN_RE.test(c) && kmM && !/骑行|Cycling|Bike/i.test(c);
+      const km = isRun ? parseFloat(kmM[1]) : 0;
+      dayKm += km;
+      allActs.push({ week, day: r.day, date: r.md, training: c,
+        duration: minM ? String(Math.round(parseFloat(minM[1]))) : '',
+        distance: km ? `${km}km` : '', readiness: r.readiness });
+      if (km) {
+        if (/节奏|Tempo|Threshold|阈值|间歇|Interval|VO2|马配|变速/i.test(c)) w.hard += km; else w.easy += km;
+        if (/长距离|长跑|Long|LSD|节奏|Tempo|间歇|Interval|VO2|阈值|Threshold/i.test(c) && minM) {
+          const hrM = c.match(/(\d{3})\s*bpm/);
+          keyWorkouts.push({ week, date: r.md,
+            type: /Interval|间歇|VO2/i.test(c) ? 'Interval' : /Tempo|节奏|阈值|Threshold/i.test(c) ? 'Tempo' : 'Long Run',
+            distKm: km, paceSec: Math.round(parseFloat(minM[1]) * 60 / km), hr: hrM ? parseInt(hrM[1]) : null });
+        }
+      }
+      const kc = c.match(/(\d+)\s*kcal/i);
+      if (kc) watchKcalByDate.set(r.iso, (watchKcalByDate.get(r.iso) || 0) + parseInt(kc[1]));
+      // minutes per day, split into run vs strength (load-mix chart)
+      // (older logs often omit minutes: runs fall back to km × 6.3, strength sessions to 70 min)
+      {
+        const m = dailyMin.get(r.iso) || { run: 0, str: 0 };
+        if (km) m.run += minM ? parseFloat(minM[1]) : km * 6.3;
+        else if (/力量|Upper|Lower|Strength|Hyrox/i.test(c)) m.str += minM ? parseFloat(minM[1]) : 70;
+        dailyMin.set(r.iso, m);
+      }
+      // Easy-run efficiency: metres per minute per heartbeat
+      const hrE = c.match(/(\d{3})\s*bpm|HR\s*(\d{3})/i);
+      if (km >= 4 && minM && hrE && /Easy|轻松|恢复|Recovery|长距离/i.test(c) && !/马配|MP|节奏|间歇|Tempo|Interval/i.test(c)) {
+        const hr = parseInt(hrE[1] || hrE[2]);
+        if (hr >= 125) effSeries.push({ date: r.iso, eff: Math.round(km * 1000 / parseFloat(minM[1]) / hr * 100) / 100, hr, paceSec: Math.round(parseFloat(minM[1]) * 60 / km) });
+      }
+    }
+    // Old formats keep km in a Distance column instead of the text
+    if (!dayKm) {
+      const dc = (r.distCol || '').match(/^[~≈]?([\d.]+)\s*km/i);
+      if (dc && RUN_RE.test(r.training)) dayKm = parseFloat(dc[1]);
+      if (dayKm) w.easy += dayKm;
+    }
+    w.km += dayKm;
+    if (dayKm) dailyKm.set(r.iso, Math.round(((dailyKm.get(r.iso) || 0) + dayKm) * 10) / 10);
+    weekMap.set(week, w);
+  }
+  const weeks = [...weekMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([week, w]) => {
+    const sun = new Date(w.mon); sun.setDate(sun.getDate() + 6);
+    const fmt = (d) => `${MON[d.getMonth()]}${pad2(d.getDate())}`;
+    return { week, range: `${fmt(w.mon)}-${fmt(sun)}`, runKm: Math.round(w.km * 10) / 10, vert: 0,
+      intensity: { easyKm: Math.round(w.easy * 10) / 10, hardKm: Math.round(w.hard * 10) / 10 } };
+  });
+  // Make sure the current week exists even before the first run of the week
+  const cw = isoWeek(today);
+  const lastMon = weekMap.size ? [...weekMap.values()].sort((a, b) => a.mon - b.mon).at(-1).mon : null;
+  if (!lastMon || lastMon < mondayOf(today)) {
+    const mon = mondayOf(today), sun = new Date(mon); sun.setDate(sun.getDate() + 6);
+    weeks.push({ week: cw, range: `${MON[mon.getMonth()]}${pad2(mon.getDate())}-${MON[sun.getMonth()]}${pad2(sun.getDate())}`, runKm: 0, vert: 0, intensity: { easyKm: 0, hardKm: 0 } });
+  }
+  return { weeks, activities: allActs, recentActivities: allActs.slice(-14), keyWorkouts, watchKcalByDate, dailyKm, dailyMin, effSeries };
 }
 
 // ---------- 3.4 Diet: 统一饮食日志 → 每日摄入 ----------
@@ -273,166 +314,110 @@ function parseDiet() {
 
 // ---------- 3.5 Coach Memory: weight trend + body measurements ----------
 function parseBody() {
-  const raw = readFileSync(join(FITNESS_DIR, 'Coach Memory.md'), 'utf8');
+  // Fasted morning weigh-ins from the body-composition table in Athlete Bio Data
+  const raw = readFileSync(bioDataPath(), 'utf8');
+  const sec = (raw.split('## 体成分记录')[1] ?? '').split('\n## ')[0];
   const weights = [];
-  const wSection = raw.split('### 体重趋势')[1]?.split('###')[0] ?? '';
-  for (const line of wSection.split('\n')) {
-    const m = line.match(/^\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([\d.]+)\s*kg\s*\|([^|]*)\|/);
-    if (m) weights.push({ date: m[1], kg: parseFloat(m[2]), note: stripMd(m[3]) });
-  }
-  const measurements = [];
-  const mSection = raw.split('### 测量记录')[1]?.split('>')[0] ?? '';
-  for (const line of mSection.split('\n')) {
+  for (const line of sec.split('\n')) {
     const m = line.match(/^\|\s*(\d{4}-\d{2}-\d{2})\s*\|/);
     if (!m) continue;
     const c = line.split('|').map((x) => stripMd(x));
-    measurements.push({ date: c[1], 肩围: c[2], 胸围: c[3], 上臂松: c[4], 上臂屈: c[5], 前臂: c[6], 腰围: c[7], 臀围: c[8], 大腿: c[9], 小腿: c[10], 体重: c[11] });
+    if (!/空腹/.test(c[3]) || /不入趋势/.test(c[3])) continue;
+    const kg = firstNum(c[4]);
+    if (kg) weights.push({ date: m[1], kg, note: c[3] });
   }
-  return { weights, measurements };
+  return { weights, measurements: [] };
 }
 
 // ============================================================================
-// CURATED DATA — hand-maintained. EDIT THIS for your own training.
-// Everything below is EXAMPLE data for a fictional marathoner. Replace freely.
+// CURATED DATA — example only. Put your own in scripts/curated.local.mjs
+// (same shape, `export default { fitnessDir, athlete, ...this }`, git-ignored).
 // ============================================================================
-const curated = {
-  phase: 'Example — Marathon build + functional strength',
-  weeklyRunTarget: [30, 40],
-  weight: { current: 70.0, asOf: '2026-01-01', target: '68-70kg' },
-  tdeeExpected: 2400, // 生理预估维持热量, 用于 TDEE 反推对比(按体重/活动量改)
-  strCtlContribution: 0, // 0 = endurance-only CTL; 0.5 = hybrid (Hyrox); 1.0 = legacy (full contribution)
+const EXAMPLE_CURATED = {
+  athlete: { name: 'Demo Runner' },
+  phase: 'Block 2 · Specific build',
+  weeklyRunTarget: [40, 50],
+  weight: { target: '66-68kg' },
+  tdeeExpected: 2800,
+  strCtlContribution: 0,
   injuries: [
-    { name: 'Example: left calf (soleus)', status: 'resolved', note: 'Cleared after eccentric heel-drop protocol. Monitor on speed work.' },
-    { name: 'Example: lower back', status: 'treating', note: 'Daily core (Dead Bug / Bird Dog). Root cause: weak core → pelvic tilt.' },
-    { name: 'Example: knee crepitus', status: 'watching', note: 'Benign patellofemoral. TKE daily. No pain.' },
+    { name: 'Example: left calf', status: 'watching', note: 'Tight after long runs. Weekly bent-knee calf-raise test to failure.', test: 'L 30 / R 32' },
+    { name: 'Example: right shoulder', status: 'treating', note: 'Pressing load frozen until reassessment; pulling volume unchanged.', test: 'Press frozen' },
   ],
   goals: {
-    firstPriority: [
-      'Fix posture (thoracic mobility, deep neck flexors)',
-      'Glute-driven running mechanics',
-      'Build core + glute + shoulder base',
-      'Long-term knee protection (VMO, patellar tracking)',
-    ],
-    performance: [
-      { year: '2026', goal: 'Marathon sub-3:45' },
-      { year: '2027', goal: 'Half 1:38 · Marathon 3:35' },
-    ],
+    firstPriority: ['Health over performance', 'Glute-driven running mechanics', 'Core, hip and shoulder durability'],
+    performance: [{ year: '2027.03', goal: 'Example Marathon — sub 3:30' }, { year: '2027', goal: 'Half 1:35' }],
   },
   pbs: [
-    { dist: '5K', time: '20:47', pace: '4:09/km', date: '2025-05-06', note: '' },
-    { dist: '10K', time: '44:56', pace: '4:30/km', date: '2025-04-29', note: '' },
-    { dist: 'Half', time: '1:39:15', pace: '4:42/km', date: '2026-04-12', note: '' },
-    { dist: 'Marathon', time: '3:45:23', pace: '5:21/km', date: '2025-10-26', note: '' },
+    { dist: '5K', time: '21:30', pace: '4:18/km', date: '2025-05-01', note: '' },
+    { dist: '10K', time: '45:10', pace: '4:31/km', date: '2025-04-20', note: '' },
+    { dist: 'Half', time: '1:41:00', pace: '4:47/km', date: '2026-04-12', note: '' },
+    { dist: 'Marathon', time: '3:39:00', pace: '5:11/km', date: '2025-10-26', note: '' },
   ],
   physio: {
-    height: 180, age: 35, lthr: 173, maxHr: '184-186',
+    height: 178, age: 35, lthr: 172, maxHr: '—', vo2max: 51,
+    predicted: { marathon: '3:35:00', half: '1:40:00', '10k': '45:00', '5k': '21:30' },
     hrZones: [
-      { zone: 'Z1', bpm: '112-138', use: 'Recovery' },
-      { zone: 'Z2', bpm: '138-154', use: 'Easy / Long Run' },
-      { zone: 'Z3', bpm: '154-164', use: 'Marathon pace' },
-      { zone: 'Z4', bpm: '164-177', use: 'Threshold' },
-      { zone: 'Z5', bpm: '>177', use: 'VO2max / race' },
+      { zone: 'Z1', bpm: '110-135', use: 'Recovery' }, { zone: 'Z2', bpm: '135-152', use: 'Easy / long run' },
+      { zone: 'Z3', bpm: '152-162', use: 'Marathon pace' }, { zone: 'Z4', bpm: '162-174', use: 'Threshold' }, { zone: 'Z5', bpm: '>174', use: 'VO2max' },
     ],
-    ltPace: '4:50-5:00/km', easyPace: '5:50-6:15/km @ HR 145-150',
-    baselines: { sleep: '72-87 (avg 77), <70 = watch', rhr: '55-59 bpm, >62 = fatigue', hrv: '38-47ms (avg 41), LOW <35ms' },
-    nutrition: {
-      protein: '~1.8 g/kg', calories: '~2000-2200 kcal/day · TDEE ~2400',
-      deficit: 'Mild deficit → ~1kg/month', notes: 'Example: protein-forward, creatine 3-4g/day, fish oil',
-    },
+    ltPace: '4:35-4:45/km', easyPace: '5:50-6:20/km',
+    baselines: { sleep: 'typical 78-88', rhr: '50-58', hrv: 'band 42-52 ms (28-day μ±0.5SD)' },
+    nutrition: { protein: '1.6-1.8 g/kg', calories: '~2400 kcal/day', deficit: 'maintenance', notes: 'Edit scripts/curated.local.mjs' },
   },
-  // 每日营养目标(供饮食看板: 热量缺口 / 宏量进度 / 完成度)。按自己情况改。
-  dietTarget: { kcal: 2200, protein: 126, carb: 240, fat: 70 },
-  races: {
-    upcoming: [
-      { name: 'Trail Race', date: '2026-06-27', detail: '24km · 980m gain · effort-based', tag: 'A race', accent: 'trail', anchor: 'trail' },
-      { name: 'Hyrox', date: '2026-08-13', detail: 'Singles · focused block after trail race', tag: 'Prep', accent: 'hyrox', anchor: 'hyrox' },
+  dietTarget: { kcal: 2400, protein: 120, carb: 300, fat: 70 },
+  races: { upcoming: [{ name: 'Example Marathon', date: '2027-03-07', detail: 'Target sub 3:30', tag: 'A race', anchor: 'macro' }] },
+  macro: {
+    name: 'Road to Race Day', start: '2026-10-05', race: '2027-03-07', target: '3:30', targetPace: '4:58/km', pb: '3:39:00',
+    phases: [
+      { n: 1, name: 'Base', start: '2026-10-05', end: '2026-11-29', km: '25→35', long: '14→20' },
+      { n: 2, name: 'Build', start: '2026-11-30', end: '2027-01-31', km: '35→50', long: '22→32' },
+      { n: 3, name: 'Specific', start: '2027-02-01', end: '2027-02-21', km: '45→50', long: '28→32' },
+      { n: 4, name: 'Taper', start: '2027-02-22', end: '2027-03-07', km: '35→race', long: '18' },
     ],
-  },
-  trail: {
-    race: { name: 'Trail Race', date: '2026-06-27', distance: 24.28, elevation: 982 },
-    longest: { date: '2026-06-07', distance: 15.45, elevation: 1152, note: 'Climb already exceeds race +17%' },
-    progression: [
-      { label: '5/24', distance: 15.31, elevation: 680, status: 'done' },
-      { label: '6/7', distance: 15.45, elevation: 1152, status: 'done' },
-      { label: '6/14', distance: 15, elevation: 500, status: 'plan' },
-      { label: '6/21', distance: 10, elevation: 200, status: 'plan' },
-      { label: 'Race', distance: 24.28, elevation: 982, status: 'race' },
-    ],
-    plan: [
-      { week: 'W21', date: '5/24', target: '15.31km / 680m', status: 'done', note: 'First trail long run' },
-      { week: 'W23', date: '6/7', target: '15.45km / 1152m', status: 'done', note: 'TE 5.0 OVERLOAD, RPE 10/10' },
-      { week: 'W24', date: '6/14', target: '15km / 500m', status: 'next', note: 'Downhill technique focus' },
-      { week: 'W25', date: '6/21', target: '10km easy', status: 'plan', note: 'Taper' },
-      { week: 'Race', date: '6/27', target: '24.28km / 982m', status: 'race', note: 'Effort-based' },
-    ],
-    gaps: [
-      { name: 'Downhill technique', sev: 'high', note: 'Main gap — confident uphill, slow downhill' },
-      { name: 'Quad eccentric strength', sev: 'high', note: 'Eccentric step-downs now mandatory' },
-      { name: 'Distance endurance', sev: 'mid', note: '24km vs longest 15.45km — manageable at effort pace' },
-      { name: 'Ankle stability (left)', sev: 'mid', note: 'Daily single-leg balance, target 20s+ both sides' },
-    ],
-    downhill: ['Short quick steps', 'Lower center of gravity, soft knees', 'Quad + glute braking, not knees', 'Zig-zag steep descents'],
-    ankle: [{ date: '5/17', right: 7.5, left: 3.5 }, { date: '5/27', right: 20, left: 12.5 }],
-    ankleTarget: 20,
-    verdict: 'Climbing validated (1152m > race 982m). Remaining gap = downhill technique + distance endurance.',
-  },
-  hyrox: {
-    status: 'Prep', race: { name: 'Hyrox Singles', date: '2026-08-13', location: 'Example City' },
-    statusNote: 'Focused block begins after the trail race (~7 weeks). Until then, classes maintain station feel.',
-    estimate: { likely: '1:22 – 1:32', optimistic: '~1:17:40', conservative: '~1:38:00' },
-    profile: 'Running top 15% · stations bottom 40%',
-    radar: [
-      { station: 'Run 8×1km', score: 90 }, { station: 'Rowing', score: 78 }, { station: 'SkiErg', score: 65 },
-      { station: 'Farmers Carry', score: 60 }, { station: 'Lunges', score: 55 }, { station: 'Sled Push', score: 35 },
-      { station: 'Burpee', score: 35 }, { station: 'Sled Pull', score: 30 }, { station: 'Wall Balls', score: 28 },
-    ],
-    bottlenecks: [
-      { rank: 1, name: 'Lactate clearance between stations', note: 'Cardio debt after erg drags the next strength station' },
-      { rank: 2, name: 'Burpee broad jump get-up', note: 'Knee-based slow rise — needs hip-hinge explosiveness' },
-      { rank: 3, name: 'Wall ball endurance', note: 'First station to collapse under lactate' },
-    ],
-    roi: 'Race-weight sled push/pull 3-4 sessions can cut 5-8min',
-    baselines: [
-      { station: 'Run 8×1km', date: '4/18', detail: '8×1km @ 4:10 avg, 组间慢跑1分', value: 250, target: 235, unit: 'min/km', dir: 'lower' },
-      { station: 'Rowing', date: '4/26', detail: '8min all-out 2:03/500m (~2000m)', value: 246, target: 228, unit: 's', dir: 'lower' },
-      { station: 'SkiErg', date: '5/16', detail: 'Interval 1min×4 ~2:15/500m', value: 270, target: 250, unit: 's', dir: 'lower' },
-      { station: 'Farmers Carry', date: '5/16', detail: '24kg 40sec×4', value: 24, target: 32, unit: 'kg', dir: 'higher' },
-      { station: 'Lunges', date: '5/9', detail: '20kg 行走箭步蹲 8×20m', value: 20, target: 28, unit: 'kg', dir: 'higher' },
-      { station: 'Sled Push', date: '5/16', detail: '30kg 40sec×4', value: 30, target: 45, unit: 'kg', dir: 'higher' },
-      { station: 'Burpee', date: '4/28', detail: 'Burpee broad jump 10次 计时 44s', value: 44, target: 38, unit: 's', dir: 'lower' },
-      { station: 'Sled Pull', date: '5/12', detail: '25kg 40sec×4', value: 25, target: 40, unit: 'kg', dir: 'higher' },
-      { station: 'Wall Balls', date: '5/2', detail: '6kg 20次 计时 58s', value: 58, target: 45, unit: 's', dir: 'lower' },
-    ],
+    longRuns: [{ date: '2026-12-13', km: 24 }, { date: '2027-01-17', km: 30, mp: 10 }, { date: '2027-02-14', km: 32, mp: 14 }, { date: '2027-03-07', km: 42.2, race: 'Race' }],
+    weekPlan: [], // { mon: 'YYYY-MM-DD', kind: 'plan' | 'est', days: [Mon..Sun km], race? } — fills the pulse ledger after this week
+    ledgerPhases: [{ from: '2026-10-05', to: '2026-11-29', t: 'Base' }, { from: '2026-11-30', to: '2027-02-21', t: 'Build' }, { from: '2027-03-01', to: '2027-03-07', t: 'Race', race: 'A' }],
+    milestones: [{ date: '2027-01-17', label: 'First 30 km', note: 'Fuel every 40 min' }, { date: '2027-03-07', label: 'Example Marathon', note: 'A race' }],
+    strategy: [{ race: 'Example Marathon', text: 'Even splits at goal pace; reassess at 30 km.' }],
   },
 };
 
-// Personalise from the `npm run setup` answers when they exist. Only the profile-shaped
-// fields are replaced (phase, race, goals, injuries, PBs, weight); the sport-specific
-// example sections (trail / Hyrox / physio) stay as examples until you edit them above.
-function applyConfig(c) {
-  let cfg;
-  try { cfg = JSON.parse(readFileSync(join(homedir(), '.claude', 'fitness-coach', 'config.json'), 'utf8')); } catch { return; }
-  const a = cfg.athlete || {};
+// Without curated.local.mjs, personalise the example from the `npm run setup` answers: profile-shaped
+// fields only (phase, goals, injuries, race, macro target). Edit curated.local.mjs for the full plan.
+function applySetup(c, cfg) {
+  const a = cfg?.athlete;
+  if (!a) return c;
+  c = structuredClone(c);
+  if (a.name) c.athlete = { name: a.name };
   if (a.goal) c.phase = a.goal;
-  c.weight = { current: '—', asOf: '', target: '' };
   c.pbs = [];
   c.injuries = (a.injuries || []).map((name) => ({ name, status: 'watching', note: '' }));
   c.goals = {
     firstPriority: a.goal ? [a.goal] : [],
     performance: a.raceName ? [{ year: (a.raceDate || '').slice(0, 4) || '—', goal: `${a.raceName}${a.raceTarget ? ' · ' + a.raceTarget : ''}` }] : [],
   };
-  if (a.raceName) {
-    c.races = { upcoming: [{ name: a.raceName, date: a.raceDate || '', detail: a.raceTarget ? `目标 ${a.raceTarget}` : '', tag: 'A race', accent: 'trail', anchor: 'races' }] };
-    c.trail = { ...c.trail, race: { name: a.raceName, date: a.raceDate || '', distance: 0, elevation: 0 }, verdict: '' };
-  }
   if (a.age) c.physio = { ...c.physio, age: a.age };
+  if (a.raceName && a.raceDate) {
+    const today = new Date().toISOString().slice(0, 10);
+    c.races = { upcoming: [{ name: a.raceName, date: a.raceDate, detail: a.raceTarget ? `目标 ${a.raceTarget}` : '', tag: 'A race', anchor: 'macro' }] };
+    c.macro = {
+      ...c.macro, name: `Road to ${a.raceName}`, start: today, race: a.raceDate, target: a.raceTarget || '—', pb: '—',
+      phases: [{ n: 1, name: 'Build', start: today, end: a.raceDate, km: '—', long: '—' }],
+      longRuns: [{ date: a.raceDate, km: 0, race: a.raceName }],
+      ledgerPhases: [{ from: today, to: a.raceDate, t: a.raceName, race: 'A' }],
+      milestones: [{ date: a.raceDate, label: a.raceName, note: 'A race' }],
+      strategy: [],
+    };
+  }
+  return c;
 }
-applyConfig(curated);
+const curated = LOCAL ?? applySetup(EXAMPLE_CURATED, SETUP);
 
 // ---------- Assemble ----------
 const recovery = parseRecovery();
 const strength = parseStrength();
-const { weeks, activities, recentActivities, keyWorkouts, watchKcalByDate } = parseWeeklyLogs();
+const { weeks, activities, recentActivities, keyWorkouts, watchKcalByDate, dailyKm, dailyMin, effSeries } = parseWeeklyLogs();
 const body = parseBody();
 const diet = parseDiet();
 
@@ -473,6 +458,9 @@ function parseLoad(activities, opts = {}) {
   const coef = (t) => {
     const s = t ?? '';
     if (/Hyrox/i.test(s)) return ['str', 1.3];
+    if (/^Lower|下肢/i.test(s)) return ['str', 1.3];
+    if (/^Upper|上肢/i.test(s)) return ['str', 1.0];
+    if (/长距离/.test(s)) return ['run', 1.1];
     if (/力量|Strength/i.test(s)) return /腿|下肢|leg|squat|trap|sled|lunge|hip|deadlift|深蹲|硬拉/i.test(s) ? ['str', 1.3] : ['str', 1.0];
     if (/越野|Trail|Hill|爬升|Vert/i.test(s)) return ['run', 1.3];
     if (/长跑|Long|LSD|耐力/i.test(s)) return ['run', 1.1];
@@ -564,6 +552,36 @@ for (const day of diet.days) {
   if (watchBurn != null) day.watchKcal = watchBurn;
 }
 
+// ---------- Pulse ledger: one row per week, Mon→Sun, km per day ----------
+// 13 weeks of logs, this week (logged so far + plan for the rest), then the week plan up to the race.
+const isoOf = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+function buildPulse() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const thisMon = mondayOf(today);
+  const planByMon = new Map((curated.macro.weekPlan || []).map((w) => [w.mon, w]));
+  const rows = [];
+  for (let k = -13; ; k++) {
+    const mon = new Date(thisMon); mon.setDate(mon.getDate() + k * 7);
+    const monIso = isoOf(mon);
+    if (monIso > curated.macro.race) break;
+    const plan = planByMon.get(monIso);
+    if (k > 0 && !plan) continue; // nothing planned for that week yet
+    const days = [];
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(mon); day.setDate(day.getDate() + d);
+      days.push(day <= today ? (dailyKm.get(isoOf(day)) || 0) : (plan ? plan.days[d] : 0));
+    }
+    rows.push({ mon: monIso, days, kind: k < 0 ? 'actual' : k === 0 ? 'now' : plan.kind || 'plan', race: plan?.race || null });
+  }
+  return { rows, phases: curated.macro.ledgerPhases || [], today: isoOf(today) };
+}
+const pulse = buildPulse();
+const weeklyMinutes = pulse.rows.filter((r) => r.kind === 'actual' || r.kind === 'now').map((r) => {
+  const mon = new Date(r.mon + 'T00:00:00'); let run = 0, str = 0;
+  for (let d = 0; d < 7; d++) { const day = new Date(mon); day.setDate(day.getDate() + d); const m = dailyMin.get(isoOf(day)); if (m) { run += m.run; str += m.str; } }
+  return { mon: r.mon, run: Math.round(run), str: Math.round(str) };
+});
+
 const latest = [...recovery].reverse();
 const latestACWR = latest.find((r) => r.acwr !== null);
 const latestVO2 = latest.find((r) => r.vo2 !== null);
@@ -573,10 +591,12 @@ const [lo] = curated.weeklyRunTarget;
 const data = {
   generatedAt: new Date().toISOString(),
   ...curated,
+  fitnessDir: undefined,
+  passcode: process.env.DASHBOARD_PASSCODE || envFile('DASHBOARD_PASSCODE') || null,
   kpi: {
-    acwr: load.acwr != null
-      ? { value: load.acwr, date: load.days.at(-1)?.date ?? '', source: 'model' }
-      : latestACWR ? { value: latestACWR.acwr, date: latestACWR.date, source: 'garmin' } : { value: 1.0, date: '' },
+    // Garmin ACWR first: the two-pool model needs ~6 unbroken weeks of logs and the vault has gaps (W30-W34)
+    acwr: latestACWR ? { value: latestACWR.acwr, date: latestACWR.date, source: 'garmin' }
+      : load.acwr != null ? { value: load.acwr, date: load.days.at(-1)?.date ?? '', source: 'model' } : { value: 1.0, date: '' },
     vo2max: latestVO2 ? { value: latestVO2.vo2, date: latestVO2.date } : { value: '—', date: '' },
     balStreak: latestBal ? { value: latestBal.balStreak, date: latestBal.date } : { value: 0, date: '' },
     currentWeekKm: weeks.at(-1)?.runKm ?? 0,
@@ -591,6 +611,10 @@ const data = {
   body,
   diet,
   load,
+  pulse,
+  weeklyMinutes,
+  effSeries: effSeries.slice(-40),
+  weightLatest: body.weights.at(-1) || null,
 };
 
 mkdirSync(OUT_DIR, { recursive: true });

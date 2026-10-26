@@ -9,3 +9,12 @@ public/data.json.*
 
 node_modules
 .DS_Store
+.env*
+
+# Old static export with real data inlined; local launch config
+public/export.html
+.claude/
+.claude-launch-note
+
+# Personal curated data (injuries, goals, plan) and vault path
+scripts/curated.local.mjs
