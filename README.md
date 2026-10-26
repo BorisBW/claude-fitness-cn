@@ -64,68 +64,130 @@ You own the data, it's diff-able in git, and it's portable. Templates are in [`e
 
 ## Mobile dashboard (deploy to Vercel)
 
-The [`dashboard/`](dashboard/) folder is a static single-page app that parses those same local files into a phone-friendly dashboard — race countdowns, Volume Load charts, recovery trends, a Hyrox station radar, trail-prep tracker, and more. Deploy it to Vercel and check your training from anywhere.
+The [`dashboard/`](dashboard/) folder is a static single-page app that parses those same local files into a phone-friendly dashboard. Its centrepiece is the **pulse ledger**: one row per week, every run drawn as a pulse, logged weeks running into the planned ones all the way to race day. Around it: macro cycle, races, running, strength, recovery, physiology, rehab and diet. Deploy it to Vercel and check your training from anywhere.
 
 ```bash
 cd dashboard
-npm run sample          # synthetic demo data
+npm run sample          # synthetic demo athlete (Road to Osaka)
 npx vercel deploy --prod
 ```
 
-Your real `data.json` is generated locally and git-ignored — the public deploy only ever shows synthetic sample data. See [`dashboard/README.md`](dashboard/README.md).
+Your real `data.json` is generated locally and git-ignored. Without it the page falls back to the synthetic demo athlete, so the public deploy never shows your data. See [`dashboard/README.md`](dashboard/README.md).
 
 ---
 
 ## Setup
 
-> **Installing this with an AI agent?** Point it at this repo and it can do the whole thing.
-> The two rules it must not get wrong:
->
-> 1. **`fitness-coach.md` is always installed.** It holds all the coaching logic.
-> 2. **`apple-watch-fitness-coach.md` is an add-on, never a replacement.** It only overrides the
->    data source and the Readiness formula, and is useless on its own. Install it *in addition to*
->    the main skill, and only for Apple Watch users.
->
-> | Wearable | Install | Then connect |
-> |---|---|---|
-> | Garmin / Coros / WHOOP | `fitness-coach.md` | the matching MCP server (step 1) |
-> | Apple Watch | `fitness-coach.md` **and** `apple-watch-fitness-coach.md` | no MCP — set up the Shortcut (step 1) |
->
-> Ask the user which wearable they own before choosing. If they own more than one, ask which is
-> the primary — recovery metrics must all come from a single device or the SWC baselines drift.
+**Requirements**: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Node.js](https://nodejs.org) 18+, and for Garmin / Coros the [`uv`](https://docs.astral.sh/uv/getting-started/installation/) tool (it provides `uvx`).
 
-### 1. Connect your wearable
-
-Pick the one you actually wear. Only Apple Watch needs a different route.
-
-<details open>
-<summary><b>Garmin (佳明)</b></summary>
+### The easy way — `npm run setup` (graphical)
 
 ```bash
-# Global accounts
-uvx --python 3.12 --from git+https://github.com/Taxuspt/garmin_mcp garmin-mcp-auth
+git clone https://github.com/BorisBW/claude-fitness-cn.git
+cd claude-fitness-cn
+npm run setup
+```
 
-# China accounts (garmin.cn)
-GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/BorisBW/garmin-mcp-cn garmin-mcp-auth
+A form opens in your browser (中文 / English). Five short pages: how the coach should talk to you →
+which watch you wear → a bit about you (age, sport, goal, injuries, training days per week) →
+where to keep your files → **Install**. Nothing is written before you press Install. It then:
+
+- installs the skill into `~/.claude/skills/fitness-coach/` (plus the Apple Watch adapter if you picked Apple Watch)
+- writes `~/.claude/fitness-coach/config.json` (device, region, data folder, coaching tone — direct / gentle / analyst / drill sergeant / training buddy — and language) and, for Xunji users, `secrets.json` with the token (no token yet? paste it to the coach in chat later)
+- creates your data folder with **Coach Memory**, **Training Plan** (a weekly skeleton built from your answers) and **Athlete Bio Data**, plus `Logs/` — **existing files are never overwritten**
+- shows the one `claude mcp add …` command that connects your watch, with a Copy button
+
+**Not a terminal person?** In the Claude desktop app, paste the repo link and say *"set up Coach Paddy"* — Claude clones it, runs `npm run setup`, and opens the form for you. The remaining `claude mcp add …` command can be pasted back to Claude as well.
+
+Run that command, start `claude` (or open the Code tab in the desktop app), and type:
+
 ```
-Then in `~/.claude/settings.json`:
-```json
-{
-  "mcpServers": {
-    "garmin": {
-      "command": "uvx",
-      "args": ["--python", "3.12", "--from", "git+https://github.com/Taxuspt/garmin_mcp", "garmin-mcp"]
-    }
-  }
-}
+/fitness-coach check
 ```
-> China users: swap the repo for `git+https://github.com/BorisBW/garmin-mcp-cn` and add `"env": {"GARMIN_IS_CN": "true"}`.
+
+The coach tests the watch connection, the files and the strength log, and tells you exactly what to
+fix if anything is off. Then, once:
+
+```
+/fitness-coach onboard
+```
+
+This pulls your watch history — 90 days of activities, 28 days of sleep / HRV / resting HR — and
+turns it into your personal baseline (no 28-day cold start), a **first assessment** (volume trend,
+intensity split, recovery, risk flags, the gap to your goal), a filled-in first training block, and
+a **dashboard** served locally (`npm run dashboard`). About five minutes on Garmin. Tomorrow morning:
+`/fitness-coach morning`. Without a watch, the assessment comes from a short interview and the first
+28 days build the baseline instead.
+
+> **Installing with an AI agent?** Tell it: *clone the repo, run `npm run setup`, and relay the form
+> to me.* If it can't open a browser, the manual steps below do the same thing. Two rules it must not
+> get wrong: `fitness-coach.md` is always installed; `apple-watch-fitness-coach.md` is an add-on for
+> Apple Watch users only, never a replacement.
+
+> **Upgrading?** Re-run `npm run setup`. It upgrades the skill file, keeps your memory files, and
+> prefills the form from your existing config. Older releases kept personal settings inside `SKILL.md`
+> and installed to `~/.claude/commands/fitness-coach.md` — point the data-folder field at your existing
+> `Fitness/` folder and delete the old command file. The recovery file was renamed
+> `Recovery Log.md` → `Athlete Bio Data.md`; the dashboard reads either.
+
+### Manual setup
+
+<details>
+<summary>Do the same thing by hand</summary>
+
+1. **Connect your wearable.** User-scoped MCP servers are stored in `~/.claude.json`; add them with the
+   CLI, not by editing `settings.json`.
+
+   ```bash
+   # Garmin (global accounts)
+   claude mcp add --scope user garmin -- uvx --python 3.12 --from git+https://github.com/Taxuspt/garmin_mcp garmin-mcp
+   uvx --python 3.12 --from git+https://github.com/Taxuspt/garmin_mcp garmin-mcp-auth      # log in once
+
+   # Garmin China (garmin.cn)
+   claude mcp add --scope user --env GARMIN_IS_CN=true garmin -- uvx --python 3.12 --from git+https://github.com/BorisBW/garmin-mcp-cn garmin-mcp
+   GARMIN_IS_CN=true uvx --python 3.12 --from git+https://github.com/BorisBW/garmin-mcp-cn garmin-mcp-auth
+
+   # Coros (Chinese accounts must log in with region="cn" — see Device notes)
+   claude mcp add --scope user coros -- uvx --python 3.12 --from git+https://github.com/cygnusb/coros-mcp coros-mcp serve
+
+   # WHOOP (needs a developer app from developer.whoop.com)
+   npx whoop-ai-mcp setup --client=claude-code --verify
+   ```
+   Apple Watch needs no MCP server — set up the Shortcut described in
+   [`apple-watch-fitness-coach.md`](apple-watch-fitness-coach.md).
+
+2. **Write the config** at `~/.claude/fitness-coach/config.json`:
+   ```json
+   {
+     "version": 1, "language": "en", "tone": "direct",
+     "wearable": "garmin", "region": "global",
+     "dataDir": "/path/to/Fitness", "appleExportDir": null, "xunji": false
+   }
+   ```
+   Xunji users add `~/.claude/fitness-coach/secrets.json`: `{ "xunjiToken": "xjllm_…" }`.
+
+3. **Create the data folder** from the templates in [`examples/`](examples/): `Coach Memory.md`,
+   `Training Plan.md`, `Athlete Bio Data.md`, and an empty `Logs/`.
+
+4. **Install the skill**:
+   ```bash
+   mkdir -p ~/.claude/skills/fitness-coach
+   cp fitness-coach.md   ~/.claude/skills/fitness-coach/SKILL.md
+   cp xunji-movements.md ~/.claude/skills/fitness-coach/     # Xunji users only
+   # Apple Watch users additionally:
+   mkdir -p ~/.claude/skills/apple-watch-fitness-coach
+   cp apple-watch-fitness-coach.md ~/.claude/skills/apple-watch-fitness-coach/SKILL.md
+   ```
+
+5. `claude` → `/fitness-coach check`.
 </details>
+
+### Device notes
 
 <details>
 <summary><b>Coros (高驰)</b> — ⚠️ Chinese accounts must use <code>region="cn"</code></summary>
 
-Add the Coros MCP server to `~/.claude/settings.json` the same way, then authenticate.
+`npm run setup` (or the manual command above) adds the server; the first data call then asks you to authenticate.
 
 **The region gotcha, because it costs everyone an hour:** Chinese Coros accounts live on
 `teamcnapi.coros.com`. The auth tool documents `eu` and `us` only, but the underlying client also
@@ -151,21 +213,6 @@ The setup wizard writes the config for you:
 npx whoop-ai-mcp setup --client=claude-code --verify
 ```
 
-Or configure it by hand:
-```json
-{
-  "mcpServers": {
-    "whoop": {
-      "command": "npx",
-      "args": ["whoop-ai-mcp"],
-      "env": {
-        "WHOOP_CLIENT_ID": "your_client_id",
-        "WHOOP_CLIENT_SECRET": "your_client_secret"
-      }
-    }
-  }
-}
-```
 A browser opens for authorisation on first launch; tokens are cached locally and refresh
 automatically.
 
@@ -210,62 +257,7 @@ logic rather than duplicating it.
   scheduled run can miss. Each export covers the last 48 hours so the next run repairs the gap.
 </details>
 
-### 2. Set up your Obsidian vault
-
-Create the file structure Coach Paddy reads and writes. Templates are in [`examples/`](examples/) — copy them and fill in your own data.
-
-```bash
-# Inside your Obsidian vault (or any folder you choose):
-mkdir -p Fitness/Logs Fitness/Archive
-
-# Copy templates as starting points:
-cp examples/coach-memory.md    "YourVault/Fitness/Coach Memory.md"
-cp examples/training-plan.md   "YourVault/Fitness/Training Plan.md"
-cp examples/athlete-bio-data.md "YourVault/Fitness/Athlete Bio Data.md"
-```
-
-Then edit these files to match your situation:
-- **Coach Memory.md** — your age, sport, injury history, equipment, goals
-- **Training Plan.md** — your current weekly structure, exercises, target paces
-- **Athlete Bio Data.md** — start with an empty daily table; the morning report fills it
-
-The skill's **Memory Files** paths (in `fitness-coach.md`) default to `~/Obsidian Base/Fitness/`. If your vault is elsewhere, update the paths in the installed skill file.
-
-### 3. (Optional) Xunji strength logging
-
-Set your Xunji API token as an environment variable — **never hard-code it**:
-```bash
-export XUNJI_TOKEN="xjllm_xxxxxxxx"
-```
-The skill calls the Xunji Open API with `Authorization: Bearer $XUNJI_TOKEN`. Movement-name mappings are in [`xunji-movements.md`](xunji-movements.md).
-
-### 4. Install the skill
-
-```bash
-mkdir -p ~/.claude/skills/fitness-coach
-cp fitness-coach.md   ~/.claude/skills/fitness-coach/SKILL.md
-cp xunji-movements.md ~/.claude/skills/fitness-coach/     # only if you use Xunji
-```
-
-**Apple Watch users — install the adapter as well:**
-```bash
-mkdir -p ~/.claude/skills/apple-watch-fitness-coach
-cp apple-watch-fitness-coach.md ~/.claude/skills/apple-watch-fitness-coach/SKILL.md
-```
-It layers on top of the main skill (overriding only the data source and the Readiness formula),
-so keep both installed.
-
-Then edit the **Athlete Profile** and **Memory Files** paths in your installed `SKILL.md` to match
-your sport and vault location.
-
-> **Upgrading from an earlier version?** Older releases installed to
-> `~/.claude/commands/fitness-coach.md`. That still works, but the `skills/` layout above is the
-> current mechanism — move it over and delete the old file so you don't run two copies.
->
-> The recovery file was also renamed `Recovery Log.md` → `Athlete Bio Data.md`. Rename yours to
-> match; the dashboard reads either, preferring the new name.
-
-### 5. (Optional) Dashboard
+### Dashboard (optional)
 
 The dashboard parses your Obsidian vault into a visual summary. To run it with your own data:
 
@@ -273,13 +265,15 @@ The dashboard parses your Obsidian vault into a visual summary. To run it with y
 cd dashboard
 
 # Point at your vault's Fitness folder:
+node scripts/build-data.mjs                          # reads dataDir from ~/.claude/fitness-coach/config.json
+# or point it somewhere explicitly:
 FITNESS_DIR="/path/to/YourVault/Fitness" node scripts/build-data.mjs
 
 # Preview locally:
 npx serve public
 ```
 
-To customise the dashboard, edit the `curated` object in `build-data.mjs` — it holds your injuries, goals, PBs, race plans, diet targets, and physiology data. The parser functions above it are generic; `curated` is the part you personalise.
+Without further setup the dashboard uses your `npm run setup` answers (name, goal, race, injuries). For the full picture (macro cycle, weekly plan, PBs, physiology, diet targets) copy the shape of `EXAMPLE_CURATED` in `build-data.mjs` into `scripts/curated.local.mjs` (git-ignored) and `export default` it. Optional: `DASHBOARD_PASSCODE=...` in `dashboard/.env.local` adds a front-end passcode screen.
 
 To deploy with sample data (for demo / public sharing):
 ```bash
@@ -289,20 +283,12 @@ npx vercel deploy --prod
 
 Your real `data.json` is git-ignored — the public deploy only ever shows synthetic sample data.
 
-### 6. Use it
-
-```bash
-claude
-> /fitness-coach morning      # readiness report before training
-> /fitness-coach evening      # training recap + injury check after
-> /fitness-coach weekly       # volume + ACWR + strength progress review
-> /fitness-coach plan         # generate or update training plan
-```
-
 ## Commands
 
 | Command | When | What |
 |---|---|---|
+| `/fitness-coach check` | Right after setup | Tests the watch, files and strength-log connections; says what to fix |
+| `/fitness-coach onboard` | Once, after the first green check | Imports 90 days of activities + 28 days of recovery → baseline, first assessment, first plan block, dashboard |
 | `/fitness-coach` | Anytime | Free chat — training, nutrition, race strategy |
 | `/fitness-coach morning` | Wake up | Readiness Score + today's plan |
 | `/fitness-coach evening` | Post-training | Analysis + Race Confidence + injury check + logs to Obsidian (+ Xunji write-back for strength) |
@@ -315,6 +301,8 @@ claude
 claude-fitness-cn/
 ├── README.md
 ├── LICENSE
+├── package.json                  # `npm run setup`
+├── setup/                        # graphical installer: server.mjs · index.html · generate.mjs
 ├── fitness-coach.md              # Main skill — Garmin / Coros / WHOOP
 ├── apple-watch-fitness-coach.md  # Apple Watch data-source adapter (install alongside)
 ├── xunji-movements.md            # Strength movement name reference
@@ -370,19 +358,34 @@ app、不需要建服务器**。它用[独立的适配器 skill](apple-watch-fit
 |---|---|---|
 | **训记 Xunji** | 力量训练记录 — 读写组数/次数/重量，Volume Load 追踪 | 训记开放 API v2（token 走环境变量） |
 
-### 安装（两个 skill 的关系）
+### 安装
 
-大多数人是直接把这个 repo 链接丢给 agent 让它自己装。两条不能搞错：
+**需要**：[Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Node.js](https://nodejs.org) 18+；佳明 / 高驰用户还需要 [`uv`](https://docs.astral.sh/uv/getting-started/installation/)（提供 `uvx` 命令）。
 
-1. **`fitness-coach.md` 永远要装**，教练逻辑全在里面
-2. **`apple-watch-fitness-coach.md` 是附加，不是替代**——它只覆盖数据源和 Readiness 公式，单独装等于空转。Apple Watch 用户要**两个都装**
+```bash
+git clone https://github.com/BorisBW/claude-fitness-cn.git
+cd claude-fitness-cn
+npm run setup
+```
 
-| 设备 | 装哪些 | 再连什么 |
-|---|---|---|
-| 佳明 / 高驰 / WHOOP | `fitness-coach.md` | 对应的 MCP server |
-| Apple Watch | `fitness-coach.md` **+** `apple-watch-fitness-coach.md` | 不用 MCP，配快捷指令 |
+浏览器会打开一张表单（中文 / English），五页：教练说话风格 → 戴哪块表 → 关于你（年龄、主项、目标、伤病、每周练几天）→ 数据放哪 → **安装**。按「安装」之前不写任何东西。然后它会：
 
-装之前先问用户戴哪块表。戴不止一块的话要问哪块是主表——恢复类指标必须全部来自同一块，否则 SWC 基线会漂。
+- 把技能装到 `~/.claude/skills/fitness-coach/`（选了 Apple Watch 会一并装适配器）
+- 写入 `~/.claude/fitness-coach/config.json`（设备、区域、数据文件夹、教练风格 5 选 1、语言）；用训记的话 token 存到 `secrets.json`（现在没有 token？以后在对话里发给教练就行）
+- 创建数据文件夹和三个记忆文件：**Coach Memory**、按你的答案生成周结构骨架的 **Training Plan**、**Athlete Bio Data**，以及 `Logs/`。**已有文件不会被覆盖**
+- 显示那一条把手表接到 Claude Code 的 `claude mcp add …` 命令，带复制按钮
+
+**不习惯用终端？** 在 Claude 桌面 App 里把 repo 链接贴给它，说「帮我安装教练」，Claude 会自己克隆、运行 `npm run setup`、打开表单。剩下那条 `claude mcp add …` 命令也可以直接贴回去让它运行。
+
+运行那条命令，启动 `claude`（或桌面 App 的 Code 标签页），输入 `/fitness-coach check`：教练会测试手表、文件和训记连接，哪里不通直接告诉你怎么修。
+
+然后输入一次 `/fitness-coach onboard`：教练把手表里的历史拉回来（90 天活动、28 天睡眠 / HRV / 静息心率），直接算出你的个人基线（不用等 28 天），写一份**首次评估**（跑量趋势、强度分布、恢复状况、风险点、和目标的差距），把第一个训练块填实，再把 **dashboard** 在本地开起来（`npm run dashboard`）。佳明大约 5 分钟。第二天早上 `/fitness-coach morning`。没有手表的话，评估改成一轮问答，基线靠前 28 天建立。
+
+**让 AI agent 装？** 跟它说：克隆 repo，运行 `npm run setup`，把表单转述给我填。打不开浏览器的话，英文部分的 Manual setup 是同样的步骤。两条不能搞错：`fitness-coach.md` 永远要装；`apple-watch-fitness-coach.md` 只给 Apple Watch 用户加装，不是替代。
+
+**升级？** 重新 `npm run setup`：技能文件升级、记忆文件保留、表单按现有配置预填。旧版本把个人设置写在 `SKILL.md` 里、装在 `~/.claude/commands/`，升级时把数据文件夹指向原来的 `Fitness/` 目录，再删掉旧的 command 文件。
+
+**手动安装 / 设备细节**：见英文部分的 Manual setup 和 Device notes。MCP 服务器要用 `claude mcp add --scope user …` 添加（存在 `~/.claude.json`），不是写进 `settings.json`。高驰中国区账号登录必须 `region="cn"`，用 eu/us 会"成功"但拉数据时报 token 无效。
 
 ### 核心逻辑（全部为透明可调的公式，见 `fitness-coach.md`）
 
@@ -399,7 +402,7 @@ app、不需要建服务器**。它用[独立的适配器 skill](apple-watch-fit
 
 ### 手机端 Dashboard
 
-`dashboard/` 是一个静态单页应用，把上述本地文件解析成手机友好的仪表盘（比赛倒计时、Volume Load 图表、恢复趋势、Hyrox 站点雷达、越野备赛追踪等），部署到 Vercel 随时随地查看。真实 `data.json` 本地生成且被 git 忽略，公开部署只展示合成示例数据。
+`dashboard/` 是一个静态单页应用，把上述本地文件解析成手机友好的仪表盘（核心是「脉冲周历」：每周一行、每次跑步一个脉冲，已练的周一路连到计划中的周、直到比赛日；另有大周期、比赛、跑步、力量、恢复、生理、康复、营养），部署到 Vercel 随时随地查看。真实 `data.json` 本地生成且被 git 忽略，公开部署只展示合成示例数据。
 
 ---
 

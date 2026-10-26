@@ -1,6 +1,9 @@
 {
- "generatedAt": "2026-08-17T14:04:46.052Z",
- "phase": "Sample — UTMB + Hyrox + Marathon triple-block build (synthetic demo data, no real athlete)",
+ "generatedAt": "2026-08-16T12:00:00.000Z",
+ "athlete": {
+  "name": "Demo Runner"
+ },
+ "phase": "UTMB 专项期 · 爬升（7/13 – 10/25）",
  "weeklyRunTarget": [
   55,
   70
@@ -20,7 +23,8 @@
   {
    "name": "Right Achilles tendinopathy",
    "status": "resolved",
-   "note": "Cleared after 8-week eccentric loading block. Monitor under speed work."
+   "note": "Cleared after 8-week eccentric loading block. Monitor under speed work.",
+   "test": "Single-leg hops 25/25"
   },
   {
    "name": "Hip flexor tightness (L)",
@@ -30,14 +34,15 @@
   {
    "name": "Plantar fasciitis (L), mild",
    "status": "watching",
-   "note": "AM stiffness only, pain-free running. Calf raises + frozen-bottle roll."
+   "note": "AM stiffness only, pain-free running. Calf raises + frozen-bottle roll.",
+   "test": "AM stiffness 2/10"
   }
  ],
  "goals": {
   "firstPriority": [
    "Vertical durability + ultra fueling (UTMB)",
    "Hyrox station-transfer strength",
-   "Marathon-specific aerobic base (London)",
+   "Marathon-specific aerobic base (Osaka)",
    "Injury-free across a 3-race season"
   ],
   "performance": [
@@ -51,7 +56,7 @@
    },
    {
     "year": "2027",
-    "goal": "London Marathon — sub-2:55 (current PB 2:58:32)"
+    "goal": "Osaka Marathon — sub-2:55 (current PB 2:58:32)"
    }
   ]
  },
@@ -86,8 +91,17 @@
   }
  ],
  "physio": {
+  "height": 176,
+  "age": 33,
   "lthr": 175,
   "maxHr": "190-192",
+  "vo2max": 59,
+  "predicted": {
+   "marathon": "2:53:40",
+   "half": "1:21:30",
+   "10k": "36:10",
+   "5k": "17:20"
+  },
   "hrZones": [
    {
     "zone": "Z1",
@@ -148,12 +162,12 @@
     "anchor": "hyrox"
    },
    {
-    "name": "London Marathon",
-    "date": "2027-04-25",
-    "detail": "World Marathon Major · Target sub-2:55",
+    "name": "Osaka Marathon",
+    "date": "2027-02-28",
+    "detail": "Season goal · Target sub-2:55 · flat, fast course",
     "tag": "Season goal",
     "accent": "marathon",
-    "anchor": "races"
+    "anchor": "macro"
    }
   ]
  },
@@ -6343,5 +6357,931 @@
    }
   ],
   "acwr": 1.02
- }
+ },
+ "tdeeExpected": 3300,
+ "macro": {
+  "name": "Road to Osaka",
+  "start": "2026-06-15",
+  "race": "2027-02-28",
+  "target": "2:52",
+  "targetPace": "4:04/km",
+  "pb": "2:58:32",
+  "phases": [
+   {
+    "n": 1,
+    "name": "越野基础",
+    "start": "2026-06-15",
+    "end": "2026-07-12",
+    "km": "45→60",
+    "long": "16→20"
+   },
+   {
+    "n": 2,
+    "name": "UTMB 专项",
+    "start": "2026-07-13",
+    "end": "2026-10-25",
+    "km": "60→84",
+    "long": "20→38 · 爬升"
+   },
+   {
+    "n": 3,
+    "name": "减量 + UTMB",
+    "start": "2026-10-26",
+    "end": "2026-11-29",
+    "km": "56→比赛",
+    "long": "24 · 16",
+    "race": "UTMB"
+   },
+   {
+    "n": 4,
+    "name": "恢复 + Hyrox",
+    "start": "2026-11-30",
+    "end": "2026-12-20",
+    "km": "24→36",
+    "long": "—",
+    "race": "Hyrox"
+   },
+   {
+    "n": 5,
+    "name": "大阪专项",
+    "start": "2026-12-21",
+    "end": "2027-02-07",
+    "km": "40→76",
+    "long": "26→34",
+    "strength": "Lower×1 maintenance + Upper A/B"
+   },
+   {
+    "n": 6,
+    "name": "大阪减量",
+    "start": "2027-02-08",
+    "end": "2027-02-28",
+    "km": "52→比赛",
+    "long": "24 · 16",
+    "race": "大阪"
+   }
+  ],
+  "longRuns": [
+   {
+    "date": "2026-08-22",
+    "km": 24
+   },
+   {
+    "date": "2026-09-05",
+    "km": 28
+   },
+   {
+    "date": "2026-09-26",
+    "km": 32
+   },
+   {
+    "date": "2026-10-10",
+    "km": 38
+   },
+   {
+    "date": "2026-10-31",
+    "km": 24
+   },
+   {
+    "date": "2026-11-28",
+    "km": 50,
+    "race": "UTMB"
+   },
+   {
+    "date": "2027-01-09",
+    "km": 26
+   },
+   {
+    "date": "2027-01-23",
+    "km": 30,
+    "mp": 12
+   },
+   {
+    "date": "2027-02-06",
+    "km": 34,
+    "mp": 18
+   },
+   {
+    "date": "2027-02-20",
+    "km": 18,
+    "mp": 8
+   },
+   {
+    "date": "2027-02-28",
+    "km": 42.2,
+    "race": "大阪"
+   }
+  ],
+  "milestones": [
+   {
+    "date": "2026-09-05",
+    "label": "Poles 首次上长距离",
+    "note": "爬升 900 m，练上坡省腿"
+   },
+   {
+    "date": "2026-10-10",
+    "label": "最长越野 38 km",
+    "note": "比赛营养完整演练"
+   },
+   {
+    "date": "2026-11-28",
+    "label": "UTMB 清迈 50K",
+    "note": "B 赛 · 体感跑"
+   },
+   {
+    "date": "2026-12-20",
+    "label": "Hyrox 巴黎",
+    "note": "Open 组 · 不追成绩"
+   },
+   {
+    "date": "2027-02-06",
+    "label": "全周期最长 34 km",
+    "note": "含 18 km 马配"
+   },
+   {
+    "date": "2027-02-28",
+    "label": "大阪马拉松",
+    "note": "A 赛 · 目标 2:52"
+   }
+  ],
+  "strategy": [
+   {
+    "race": "UTMB 清迈 50K · B 赛",
+    "text": "按体感和心率跑，上坡用杖，下坡保护股四。每小时 60–80 g 碳水。"
+   },
+   {
+    "race": "大阪 · A 赛",
+    "text": "前 30 km 稳在 4:04–4:06，30 km 后感觉好再提速；补给每 30 分钟一包胶。"
+   }
+  ]
+ },
+ "pulse": {
+  "rows": [
+   {
+    "mon": "2026-05-18",
+    "days": [
+     0,
+     7.2,
+     6,
+     8,
+     0,
+     13.2,
+     5.6
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-05-25",
+    "days": [
+     0,
+     7.9,
+     6.6,
+     8.8,
+     0,
+     14.5,
+     6.2
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-06-01",
+    "days": [
+     0,
+     8.3,
+     6.9,
+     9.2,
+     0,
+     15.2,
+     6.4
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-06-08",
+    "days": [
+     0,
+     6.8,
+     5.7,
+     7.6,
+     0,
+     12.5,
+     5.3
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-06-15",
+    "days": [
+     0,
+     8.6,
+     7.2,
+     9.6,
+     0,
+     15.8,
+     6.7
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-06-22",
+    "days": [
+     0,
+     9.4,
+     7.8,
+     10.4,
+     0,
+     17.2,
+     7.3
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-06-29",
+    "days": [
+     0,
+     10.4,
+     8.7,
+     11.6,
+     0,
+     19.1,
+     8.1
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-07-06",
+    "days": [
+     0,
+     8.1,
+     6.8,
+     9,
+     0,
+     14.9,
+     6.3
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-07-13",
+    "days": [
+     0,
+     10.8,
+     9,
+     12,
+     0,
+     19.8,
+     8.4
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-07-20",
+    "days": [
+     0,
+     11.7,
+     9.8,
+     13,
+     0,
+     21.5,
+     9.1
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-07-27",
+    "days": [
+     0,
+     12.2,
+     10.2,
+     13.6,
+     0,
+     22.4,
+     9.5
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-08-03",
+    "days": [
+     0,
+     11.2,
+     9.3,
+     12.4,
+     0,
+     20.5,
+     8.7
+    ],
+    "kind": "actual",
+    "race": null
+   },
+   {
+    "mon": "2026-08-10",
+    "days": [
+     0,
+     11.5,
+     9.6,
+     12.8,
+     0,
+     21.1,
+     9
+    ],
+    "kind": "now",
+    "race": null
+   },
+   {
+    "mon": "2026-08-17",
+    "days": [
+     0,
+     11.9,
+     9.9,
+     13.2,
+     0,
+     21.8,
+     9.2
+    ],
+    "kind": "plan",
+    "race": null
+   },
+   {
+    "mon": "2026-08-24",
+    "days": [
+     0,
+     12.6,
+     10.5,
+     14,
+     0,
+     23.1,
+     9.8
+    ],
+    "kind": "plan",
+    "race": null
+   },
+   {
+    "mon": "2026-08-31",
+    "days": [
+     0,
+     10.1,
+     8.4,
+     11.2,
+     0,
+     18.5,
+     7.8
+    ],
+    "kind": "plan",
+    "race": null
+   },
+   {
+    "mon": "2026-09-07",
+    "days": [
+     0,
+     13,
+     10.8,
+     14.4,
+     0,
+     23.8,
+     10.1
+    ],
+    "kind": "plan",
+    "race": null
+   },
+   {
+    "mon": "2026-09-14",
+    "days": [
+     0,
+     13.7,
+     11.4,
+     15.2,
+     0,
+     25.1,
+     10.6
+    ],
+    "kind": "plan",
+    "race": null
+   },
+   {
+    "mon": "2026-09-21",
+    "days": [
+     0,
+     10.8,
+     9,
+     12,
+     0,
+     19.8,
+     8.4
+    ],
+    "kind": "plan",
+    "race": null
+   },
+   {
+    "mon": "2026-09-28",
+    "days": [
+     0,
+     14.4,
+     12,
+     16,
+     0,
+     26.4,
+     11.2
+    ],
+    "kind": "plan",
+    "race": null
+   },
+   {
+    "mon": "2026-10-05",
+    "days": [
+     0,
+     14.8,
+     12.3,
+     16.4,
+     0,
+     27.1,
+     11.5
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-10-12",
+    "days": [
+     0,
+     11.9,
+     9.9,
+     13.2,
+     0,
+     21.8,
+     9.2
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-10-19",
+    "days": [
+     0,
+     15.1,
+     12.6,
+     16.8,
+     0,
+     27.7,
+     11.8
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-10-26",
+    "days": [
+     0,
+     12.6,
+     10.5,
+     14,
+     0,
+     23.1,
+     9.8
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-11-02",
+    "days": [
+     0,
+     10.1,
+     8.4,
+     11.2,
+     0,
+     18.5,
+     7.8
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-11-09",
+    "days": [
+     0,
+     7.9,
+     6.6,
+     8.8,
+     0,
+     14.5,
+     6.2
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-11-16",
+    "days": [
+     0,
+     3.6,
+     3,
+     4,
+     0,
+     50,
+     0
+    ],
+    "kind": "est",
+    "race": "UTMB"
+   },
+   {
+    "mon": "2026-11-23",
+    "days": [
+     0,
+     4.3,
+     3.6,
+     4.8,
+     0,
+     7.9,
+     3.4
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-11-30",
+    "days": [
+     0,
+     6.5,
+     5.4,
+     7.2,
+     0,
+     11.9,
+     5
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-12-07",
+    "days": [
+     0,
+     5.4,
+     4.5,
+     6,
+     0,
+     0,
+     8
+    ],
+    "kind": "est",
+    "race": "Hyrox"
+   },
+   {
+    "mon": "2026-12-14",
+    "days": [
+     0,
+     7.2,
+     6,
+     8,
+     0,
+     13.2,
+     5.6
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-12-21",
+    "days": [
+     0,
+     9.4,
+     7.8,
+     10.4,
+     0,
+     17.2,
+     7.3
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2026-12-28",
+    "days": [
+     0,
+     10.8,
+     9,
+     12,
+     0,
+     19.8,
+     8.4
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-01-04",
+    "days": [
+     0,
+     11.9,
+     9.9,
+     13.2,
+     0,
+     21.8,
+     9.2
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-01-11",
+    "days": [
+     0,
+     10.1,
+     8.4,
+     11.2,
+     0,
+     18.5,
+     7.8
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-01-18",
+    "days": [
+     0,
+     13,
+     10.8,
+     14.4,
+     0,
+     23.8,
+     10.1
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-01-25",
+    "days": [
+     0,
+     13.7,
+     11.4,
+     15.2,
+     0,
+     25.1,
+     10.6
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-02-01",
+    "days": [
+     0,
+     11.5,
+     9.6,
+     12.8,
+     0,
+     21.1,
+     9
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-02-08",
+    "days": [
+     0,
+     9.4,
+     7.8,
+     10.4,
+     0,
+     17.2,
+     7.3
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-02-15",
+    "days": [
+     0,
+     7.6,
+     6.3,
+     8.4,
+     0,
+     13.9,
+     5.9
+    ],
+    "kind": "est",
+    "race": null
+   },
+   {
+    "mon": "2027-02-22",
+    "days": [
+     0,
+     2.9,
+     2.4,
+     3.2,
+     0,
+     0,
+     42.2
+    ],
+    "kind": "est",
+    "race": "Osaka"
+   }
+  ],
+  "phases": [
+   {
+    "from": "2026-05-18",
+    "to": "2026-07-12",
+    "t": "Base · 越野基础"
+   },
+   {
+    "from": "2026-07-13",
+    "to": "2026-10-25",
+    "t": "爬升期 · UTMB 专项"
+   },
+   {
+    "from": "2026-10-26",
+    "to": "2026-11-22",
+    "t": "减量"
+   },
+   {
+    "from": "2026-11-23",
+    "to": "2026-11-29",
+    "t": "UTMB 清迈 50K · 11/28",
+    "race": "B"
+   },
+   {
+    "from": "2026-11-30",
+    "to": "2026-12-20",
+    "t": "恢复 · Hyrox 巴黎 12/20"
+   },
+   {
+    "from": "2026-12-21",
+    "to": "2027-02-07",
+    "t": "大阪专项"
+   },
+   {
+    "from": "2027-02-08",
+    "to": "2027-02-21",
+    "t": "减量"
+   },
+   {
+    "from": "2027-02-22",
+    "to": "2027-02-28",
+    "t": "大阪 42.2 · 2/28",
+    "race": "A"
+   }
+  ],
+  "today": "2026-08-16"
+ },
+ "weeklyMinutes": [
+  {
+   "mon": "2026-05-18",
+   "run": 200,
+   "str": 210
+  },
+  {
+   "mon": "2026-05-25",
+   "run": 220,
+   "str": 190
+  },
+  {
+   "mon": "2026-06-01",
+   "run": 230,
+   "str": 200
+  },
+  {
+   "mon": "2026-06-08",
+   "run": 190,
+   "str": 140
+  },
+  {
+   "mon": "2026-06-15",
+   "run": 240,
+   "str": 220
+  },
+  {
+   "mon": "2026-06-22",
+   "run": 261,
+   "str": 210
+  },
+  {
+   "mon": "2026-06-29",
+   "run": 290,
+   "str": 230
+  },
+  {
+   "mon": "2026-07-06",
+   "run": 225,
+   "str": 150
+  },
+  {
+   "mon": "2026-07-13",
+   "run": 300,
+   "str": 220
+  },
+  {
+   "mon": "2026-07-20",
+   "run": 326,
+   "str": 210
+  },
+  {
+   "mon": "2026-07-27",
+   "run": 340,
+   "str": 200
+  },
+  {
+   "mon": "2026-08-03",
+   "run": 311,
+   "str": 190
+  },
+  {
+   "mon": "2026-08-10",
+   "run": 320,
+   "str": 210
+  }
+ ],
+ "effSeries": [
+  {
+   "date": "2026-06-01",
+   "eff": 1.28,
+   "hr": 150,
+   "paceSec": 313
+  },
+  {
+   "date": "2026-06-08",
+   "eff": 1.29,
+   "hr": 150,
+   "paceSec": 310
+  },
+  {
+   "date": "2026-06-15",
+   "eff": 1.27,
+   "hr": 150,
+   "paceSec": 315
+  },
+  {
+   "date": "2026-06-22",
+   "eff": 1.3,
+   "hr": 150,
+   "paceSec": 308
+  },
+  {
+   "date": "2026-06-29",
+   "eff": 1.31,
+   "hr": 150,
+   "paceSec": 305
+  },
+  {
+   "date": "2026-07-06",
+   "eff": 1.3,
+   "hr": 150,
+   "paceSec": 308
+  },
+  {
+   "date": "2026-07-13",
+   "eff": 1.32,
+   "hr": 150,
+   "paceSec": 303
+  },
+  {
+   "date": "2026-07-20",
+   "eff": 1.33,
+   "hr": 150,
+   "paceSec": 301
+  },
+  {
+   "date": "2026-07-27",
+   "eff": 1.31,
+   "hr": 150,
+   "paceSec": 305
+  },
+  {
+   "date": "2026-08-03",
+   "eff": 1.34,
+   "hr": 150,
+   "paceSec": 299
+  },
+  {
+   "date": "2026-08-10",
+   "eff": 1.35,
+   "hr": 150,
+   "paceSec": 296
+  },
+  {
+   "date": "2026-08-17",
+   "eff": 1.36,
+   "hr": 150,
+   "paceSec": 294
+  }
+ ],
+ "weightLatest": {
+  "date": "2026-08-15",
+  "kg": 66.5,
+  "note": "-1.5kg total"
+ },
+ "passcode": null
 }
